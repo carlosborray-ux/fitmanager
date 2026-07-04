@@ -12,6 +12,14 @@ import { todayISO } from "./format";
 export const usingDemoData = !isSupabaseConfigured;
 export const MAX_PLANS = 50;
 
+// Tablas prefijadas porque este proyecto de Supabase es compartido con otras apps.
+const TABLES = {
+  plans: "fitmanager_plans",
+  clients: "fitmanager_clients",
+  payments: "fitmanager_payments",
+  attendance: "fitmanager_attendance",
+} as const;
+
 function sortByCreatedDesc<T extends { created_at: string }>(rows: T[]): T[] {
   return [...rows].sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
 }
@@ -23,7 +31,7 @@ export async function listPlans(): Promise<Plan[]> {
     return sortByCreatedDesc(demoDb.get().plans);
   }
   const { data, error } = await supabase!
-    .from("plans")
+    .from(TABLES.plans)
     .select("*")
     .order("created_at", { ascending: false });
   if (error) throw error;
@@ -54,7 +62,7 @@ export async function savePlan(plan: Partial<Plan> & { name: string }): Promise<
     return db.plans.find((p) => p.name === plan.name)!;
   }
   const { data, error } = await supabase!
-    .from("plans")
+    .from(TABLES.plans)
     .upsert(plan)
     .select()
     .single();
@@ -69,7 +77,7 @@ export async function deletePlan(id: string): Promise<void> {
     demoDb.set(db);
     return;
   }
-  const { error } = await supabase!.from("plans").delete().eq("id", id);
+  const { error } = await supabase!.from(TABLES.plans).delete().eq("id", id);
   if (error) throw error;
 }
 
@@ -85,8 +93,8 @@ export async function listClients(): Promise<Client[]> {
     return sortByCreatedDesc(db.clients).map((c) => attachPlan(c, db.plans));
   }
   const { data, error } = await supabase!
-    .from("clients")
-    .select("*, plan:plans(*)")
+    .from(TABLES.clients)
+    .select("*, plan:fitmanager_plans(*)")
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data as Client[];
@@ -123,9 +131,9 @@ export async function saveClient(
     return attachPlan(saved, db.plans);
   }
   const { data, error } = await supabase!
-    .from("clients")
+    .from(TABLES.clients)
     .upsert(client)
-    .select("*, plan:plans(*)")
+    .select("*, plan:fitmanager_plans(*)")
     .single();
   if (error) throw error;
   return data as Client;
@@ -140,7 +148,7 @@ export async function deleteClient(id: string): Promise<void> {
     demoDb.set(db);
     return;
   }
-  const { error } = await supabase!.from("clients").delete().eq("id", id);
+  const { error } = await supabase!.from(TABLES.clients).delete().eq("id", id);
   if (error) throw error;
 }
 
@@ -163,8 +171,8 @@ export async function listPayments(): Promise<Payment[]> {
     );
   }
   const { data, error } = await supabase!
-    .from("payments")
-    .select("*, client:clients(*)")
+    .from(TABLES.payments)
+    .select("*, client:fitmanager_clients(*)")
     .order("payment_date", { ascending: false });
   if (error) throw error;
   return data as Payment[];
@@ -185,9 +193,9 @@ export async function createPayment(
     return attachClient(created, db.clients, db.plans);
   }
   const { data, error } = await supabase!
-    .from("payments")
+    .from(TABLES.payments)
     .insert(payment)
-    .select("*, client:clients(*)")
+    .select("*, client:fitmanager_clients(*)")
     .single();
   if (error) throw error;
   return data as Payment;
@@ -200,7 +208,7 @@ export async function deletePayment(id: string): Promise<void> {
     demoDb.set(db);
     return;
   }
-  const { error } = await supabase!.from("payments").delete().eq("id", id);
+  const { error } = await supabase!.from(TABLES.payments).delete().eq("id", id);
   if (error) throw error;
 }
 
@@ -214,8 +222,8 @@ export async function listAttendance(): Promise<AttendanceRecord[]> {
       .map((a) => attachClient(a, db.clients, db.plans));
   }
   const { data, error } = await supabase!
-    .from("attendance")
-    .select("*, client:clients(*)")
+    .from(TABLES.attendance)
+    .select("*, client:fitmanager_clients(*)")
     .order("checked_in_at", { ascending: false });
   if (error) throw error;
   return data as AttendanceRecord[];
@@ -240,9 +248,9 @@ export async function checkInClient(
     return attachClient(created, db.clients, db.plans);
   }
   const { data, error } = await supabase!
-    .from("attendance")
+    .from(TABLES.attendance)
     .insert({ client_id: clientId, checked_in_at: checkedInAt, notes: notes ?? null })
-    .select("*, client:clients(*)")
+    .select("*, client:fitmanager_clients(*)")
     .single();
   if (error) throw error;
   return data as AttendanceRecord;
@@ -255,7 +263,7 @@ export async function deleteAttendance(id: string): Promise<void> {
     demoDb.set(db);
     return;
   }
-  const { error } = await supabase!.from("attendance").delete().eq("id", id);
+  const { error } = await supabase!.from(TABLES.attendance).delete().eq("id", id);
   if (error) throw error;
 }
 
