@@ -1,4 +1,5 @@
 export const WEEKDAYS = ["L", "M", "X", "J", "V", "S", "D"];
+export const WEEKDAYS_SHORT = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
 export const MONTH_NAMES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
@@ -10,6 +11,18 @@ function pad(n: number): string {
 
 export function toISODate(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+export function addDays(date: Date, days: number): Date {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+export function startOfWeek(iso: string): Date {
+  const d = new Date(`${iso}T00:00:00`);
+  const dayIndex = (d.getDay() + 6) % 7; // Monday = 0
+  return addDays(d, -dayIndex);
 }
 
 export function monthMatrix(year: number, month: number): (Date | null)[][] {

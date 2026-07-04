@@ -1,30 +1,72 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, ChevronLeft, ChevronRight, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
 import Modal from "@/components/Modal";
 import Avatar from "@/components/Avatar";
-import EmptyState from "@/components/EmptyState";
-import { MONTH_NAMES, WEEKDAYS, monthMatrix, toISODate } from "@/lib/calendar-utils";
+import { MONTH_NAMES, WEEKDAYS_SHORT, addDays, startOfWeek, toISODate } from "@/lib/calendar-utils";
 import {
   deleteClassSession,
   listClassSessions,
   listClients,
   saveClassSession,
 } from "@/lib/data-service";
-import { formatDate, todayISO } from "@/lib/format";
+import { todayISO } from "@/lib/format";
 import { Client, ClassSession } from "@/lib/types";
+
+const HOUR_START = 5;
+const HOUR_END = 21;
+const HOUR_HEIGHT = 56;
+
+function pad(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+function timeToMinutes(t: string): number {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function formatHourLabel(hour: number): string {
+  const period = hour < 12 ? "AM" : "PM";
+  const h12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${h12} ${period}`;
+}
+
+function formatShortDate(iso: string): string {
+  const d = new Date(`${iso}T00:00:00`);
+  return `${d.getDate()} de ${MONTH_NAMES[d.getMonth()].toLowerCase()}`;
+}
+
+interface LaidOutSession extends ClassSession {
+  col: number;
+  colCount: number;
+}
+
+function layoutDaySessions(sessions: ClassSession[]): LaidOutSession[] {
+  const sorted = [...sessions].sort((a, b) => (a.start_time < b.start_time ? -1 : 1));
+  const columnEnds: string[] = [];
+  const placed: (ClassSession & { col: number })[] = [];
+  for (const s of sorted) {
+    let col = columnEnds.findIndex((end) => end <= s.start_time);
+    if (col === -1) {
+      col = columnEnds.length;
+      columnEnds.push(s.end_time);
+    } else {
+      columnEnds[col] = s.end_time;
+    }
+    placed.push({ ...s, col });
+  }
+  const colCount = columnEnds.length || 1;
+  return placed.map((p) => ({ ...p, colCount }));
+}
 
 export default function CalendarPage() {
   const today = todayISO();
-  const [cursor, setCursor] = useState(() => {
-    const d = new Date(`${today}T00:00:00`);
-    return { year: d.getFullYear(), month: d.getMonth() };
-  });
+  const [weekStart, setWeekStart] = useState(() => toISODate(startOfWeek(today)));
   const [sessions, setSessions] = useState<ClassSession[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dayModal, setDayModal] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<ClassSession | null>(null);
 
@@ -45,6 +87,11 @@ export default function CalendarPage() {
     refresh().finally(() => setLoading(false));
   }, []);
 
+  const weekDays = useMemo(() => {
+    const start = new Date(`${weekStart}T00:00:00`);
+    return Array.from({ length: 7 }, (_, i) => toISODate(addDays(start, i)));
+  }, [weekStart]);
+
   const sessionsByDate = useMemo(() => {
     const map = new Map<string, ClassSession[]>();
     for (const s of sessions) {
@@ -55,27 +102,24 @@ export default function CalendarPage() {
     return map;
   }, [sessions]);
 
-  function goToMonth(delta: number) {
-    setCursor((c) => {
-      let month = c.month + delta;
-      let year = c.year;
-      if (month < 0) {
-        month = 11;
-        year--;
-      }
-      if (month > 11) {
-        month = 0;
-        year++;
-      }
-      return { year, month };
-    });
+  const hours = useMemo(
+    () => Array.from({ length: HOUR_END - HOUR_START }, (_, i) => HOUR_START + i),
+    []
+  );
+
+  function goToWeek(deltaWeeks: number) {
+    setWeekStart((prev) => toISODate(addDays(new Date(`${prev}T00:00:00`), deltaWeeks * 7)));
   }
 
-  function openNewForm(prefillDate?: string) {
+  function goToToday() {
+    setWeekStart(toISODate(startOfWeek(today)));
+  }
+
+  function openNewForm(dateIso: string, start = "07:00", end = "08:00") {
     setEditingSession(null);
-    setFormDate(prefillDate ?? dayModal ?? today);
-    setStartTime("07:00");
-    setEndTime("08:00");
+    setFormDate(dateIso);
+    setStartTime(start);
+    setEndTime(end);
     setTitle("");
     setSelectedClientIds([]);
     setClientSearch("");
@@ -112,9 +156,11 @@ export default function CalendarPage() {
     await refresh();
   }
 
-  async function handleDelete(id: string) {
+  async function handleDelete() {
+    if (!editingSession) return;
     if (!confirm("¿Eliminar esta clase agendada?")) return;
-    await deleteClassSession(id);
+    await deleteClassSession(editingSession.id);
+    setFormOpen(false);
     await refresh();
   }
 
@@ -122,124 +168,135 @@ export default function CalendarPage() {
     c.full_name.toLowerCase().includes(clientSearch.toLowerCase())
   );
 
-  const monthLabel = `${MONTH_NAMES[cursor.month]} ${cursor.year}`;
-  const daySessions = dayModal
-    ? [...(sessionsByDate.get(dayModal) ?? [])].sort((a, b) => (a.start_time < b.start_time ? -1 : 1))
-    : [];
+  const rangeLabel = `${formatShortDate(weekDays[0])} — ${formatShortDate(weekDays[6])} ${new Date(
+    `${weekDays[6]}T00:00:00`
+  ).getFullYear()}`;
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900">Calendario</h1>
-          <p className="text-sm text-zinc-500">Agenda las clases de tus clientes</p>
+          <h1 className="text-2xl font-bold text-zinc-900">Agenda</h1>
+          <p className="text-sm text-zinc-500">{rangeLabel}</p>
         </div>
-        <button onClick={() => openNewForm(today)} className="btn-primary">
-          <Plus size={16} /> Agendar clase
-        </button>
-      </div>
-
-      <div className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white p-3 shadow-sm">
-        <button onClick={() => goToMonth(-1)} className="rounded-lg p-1.5 hover:bg-zinc-100" aria-label="Mes anterior">
-          <ChevronLeft size={18} />
-        </button>
-        <p className="font-semibold capitalize text-zinc-900">{monthLabel}</p>
-        <button onClick={() => goToMonth(1)} className="rounded-lg p-1.5 hover:bg-zinc-100" aria-label="Mes siguiente">
-          <ChevronRight size={18} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => openNewForm(today)} className="btn-primary">
+            <Plus size={16} /> Agendar clase
+          </button>
+          <button onClick={() => goToWeek(-1)} className="rounded-lg border border-zinc-200 bg-white p-2 hover:bg-zinc-50" aria-label="Semana anterior">
+            <ChevronLeft size={16} />
+          </button>
+          <button onClick={goToToday} className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50">
+            Hoy
+          </button>
+          <button onClick={() => goToWeek(1)} className="rounded-lg border border-zinc-200 bg-white p-2 hover:bg-zinc-50" aria-label="Semana siguiente">
+            <ChevronRight size={16} />
+          </button>
+        </div>
       </div>
 
       {loading ? (
         <div className="h-96 animate-pulse rounded-xl bg-zinc-100" />
       ) : (
-        <div className="rounded-xl border border-zinc-200 bg-white p-3 shadow-sm">
-          <div className="grid grid-cols-7 gap-1 text-center">
-            {WEEKDAYS.map((w) => (
-              <span key={w} className="pb-2 text-xs font-semibold text-zinc-400">
-                {w}
-              </span>
-            ))}
-            {monthMatrix(cursor.year, cursor.month).flatMap((week, wi) =>
-              week.map((day, di) => {
-                if (!day) return <div key={`${wi}-${di}`} />;
-                const iso = toISODate(day);
-                const count = sessionsByDate.get(iso)?.length ?? 0;
+        <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white shadow-sm">
+          <div style={{ minWidth: 780 }}>
+            <div
+              className="sticky top-0 z-10 grid border-b border-zinc-200 bg-white"
+              style={{ gridTemplateColumns: "56px repeat(7, minmax(100px, 1fr))" }}
+            >
+              <div />
+              {weekDays.map((iso, i) => {
                 const isToday = iso === today;
+                const count = sessionsByDate.get(iso)?.length ?? 0;
+                const d = new Date(`${iso}T00:00:00`);
                 return (
-                  <button
-                    key={`${wi}-${di}`}
-                    onClick={() => setDayModal(iso)}
-                    className={`flex aspect-square flex-col items-center justify-center gap-0.5 rounded-lg text-sm transition-colors ${
-                      isToday ? "bg-violet-50 font-semibold text-violet-700" : "text-zinc-700 hover:bg-zinc-50"
-                    }`}
-                  >
-                    {day.getDate()}
-                    {count > 0 && (
-                      <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-violet-600 px-1 text-[10px] font-semibold text-white">
-                        {count}
-                      </span>
-                    )}
-                  </button>
+                  <div key={iso} className="border-l border-zinc-100 px-1 py-2 text-center">
+                    <p className="text-[10px] font-semibold tracking-wide text-zinc-400">
+                      {WEEKDAYS_SHORT[i]}
+                    </p>
+                    <p
+                      className={`mx-auto flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${
+                        isToday ? "bg-violet-600 text-white" : "text-zinc-800"
+                      }`}
+                    >
+                      {d.getDate()}
+                    </p>
+                    <p className="text-[10px] text-zinc-400">{count > 0 ? `${count} clase${count > 1 ? "s" : ""}` : ""}</p>
+                  </div>
                 );
-              })
-            )}
+              })}
+            </div>
+
+            <div className="relative grid" style={{ gridTemplateColumns: "56px repeat(7, minmax(100px, 1fr))" }}>
+              <div className="relative">
+                {hours.map((h) => (
+                  <div
+                    key={h}
+                    style={{ height: HOUR_HEIGHT }}
+                    className="border-t border-zinc-100 pr-1.5 text-right text-[10px] text-zinc-400"
+                  >
+                    <span className="relative -top-1.5">{formatHourLabel(h)}</span>
+                  </div>
+                ))}
+              </div>
+
+              {weekDays.map((iso) => {
+                const laidOut = layoutDaySessions(sessionsByDate.get(iso) ?? []);
+                return (
+                  <div key={iso} className="relative border-l border-zinc-100">
+                    {hours.map((h) => (
+                      <div key={h} style={{ height: HOUR_HEIGHT }} className="group relative border-t border-zinc-100">
+                        <button
+                          onClick={() => openNewForm(iso, `${pad(h)}:00`, `${pad(h + 1)}:00`)}
+                          className="absolute inset-x-0 top-0 flex h-1/2 items-center justify-center text-[9px] text-violet-500 opacity-0 hover:bg-violet-50 group-hover:opacity-100"
+                        >
+                          clic para agregar
+                        </button>
+                        <button
+                          onClick={() => openNewForm(iso, `${pad(h)}:30`, `${pad(h + 1)}:30`)}
+                          className="absolute inset-x-0 top-1/2 flex h-1/2 items-center justify-center text-[9px] text-violet-500 opacity-0 hover:bg-violet-50 group-hover:opacity-100"
+                        >
+                          clic para agregar
+                        </button>
+                      </div>
+                    ))}
+
+                    {laidOut.map((session) => {
+                      const startMin = Math.max(timeToMinutes(session.start_time), HOUR_START * 60);
+                      const endMin = Math.min(timeToMinutes(session.end_time), HOUR_END * 60);
+                      const top = ((startMin - HOUR_START * 60) / 60) * HOUR_HEIGHT;
+                      const height = Math.max(((endMin - startMin) / 60) * HOUR_HEIGHT, 20);
+                      const widthPct = 100 / session.colCount;
+                      return (
+                        <button
+                          key={session.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditForm(session);
+                          }}
+                          style={{
+                            top,
+                            height,
+                            left: `${session.col * widthPct}%`,
+                            width: `${widthPct}%`,
+                          }}
+                          className="absolute z-[1] overflow-hidden rounded-md border border-violet-300 bg-violet-100 p-1 text-left shadow-sm hover:bg-violet-200"
+                        >
+                          <p className="truncate text-[11px] font-semibold text-violet-900">
+                            {session.title || `${session.clients.length} cliente(s)`}
+                          </p>
+                          <p className="truncate text-[10px] text-violet-700">
+                            {session.start_time} - {session.end_time}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
-      )}
-
-      {dayModal && (
-        <Modal title={formatDate(dayModal)} onClose={() => setDayModal(null)}>
-          <div className="flex flex-col gap-3">
-            {daySessions.length === 0 ? (
-              <EmptyState icon={CalendarDays} title="Sin clases agendadas este dia" />
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {daySessions.map((session) => (
-                  <li key={session.id} className="rounded-lg border border-zinc-200 p-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-zinc-900">
-                          {session.start_time} - {session.end_time}
-                        </p>
-                        {session.title && <p className="text-xs text-zinc-500">{session.title}</p>}
-                      </div>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => openEditForm(session)}
-                          className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100"
-                          aria-label="Editar clase"
-                        >
-                          <Pencil size={14} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(session.id)}
-                          className="rounded-lg p-1.5 text-red-500 hover:bg-red-50"
-                          aria-label="Eliminar clase"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {session.clients.map((c) => (
-                        <span
-                          key={c.id}
-                          className="flex items-center gap-1.5 rounded-full bg-zinc-100 py-0.5 pl-0.5 pr-2 text-xs text-zinc-700"
-                        >
-                          <Avatar name={c.full_name} size={20} />
-                          {c.full_name}
-                        </span>
-                      ))}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <button onClick={() => openNewForm(dayModal)} className="btn-primary justify-center">
-              <Plus size={16} /> Agendar clase este dia
-            </button>
-          </div>
-        </Modal>
       )}
 
       {formOpen && (
@@ -292,7 +349,7 @@ export default function CalendarPage() {
                 placeholder="Buscar cliente..."
                 className="input"
               />
-              <div className="mt-1 max-h-48 overflow-y-auto rounded-lg border border-zinc-200">
+              <div className="mt-1 max-h-40 overflow-y-auto rounded-lg border border-zinc-200">
                 {filteredClientsForForm.length === 0 ? (
                   <p className="p-3 text-sm text-zinc-500">No hay clientes activos que coincidan.</p>
                 ) : (
@@ -314,13 +371,20 @@ export default function CalendarPage() {
                 )}
               </div>
             </div>
-            <button
-              type="submit"
-              disabled={selectedClientIds.length === 0}
-              className="btn-primary mt-2 justify-center"
-            >
-              Guardar clase
-            </button>
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                type="submit"
+                disabled={selectedClientIds.length === 0}
+                className="btn-primary flex-1 justify-center"
+              >
+                Guardar clase
+              </button>
+              {editingSession && (
+                <button type="button" onClick={handleDelete} className="btn-danger">
+                  <Trash2 size={14} /> Eliminar
+                </button>
+              )}
+            </div>
           </form>
         </Modal>
       )}
