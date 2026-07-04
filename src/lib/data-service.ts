@@ -10,6 +10,7 @@ import {
 import { todayISO } from "./format";
 
 export const usingDemoData = !isSupabaseConfigured;
+export const MAX_PLANS = 50;
 
 function sortByCreatedDesc<T extends { created_at: string }>(rows: T[]): T[] {
   return [...rows].sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
@@ -35,11 +36,15 @@ export async function savePlan(plan: Partial<Plan> & { name: string }): Promise<
     if (plan.id) {
       db.plans = db.plans.map((p) => (p.id === plan.id ? { ...p, ...plan } as Plan : p));
     } else {
+      if (db.plans.length >= MAX_PLANS) {
+        throw new Error(`Ya tienes el maximo de ${MAX_PLANS} planes.`);
+      }
       const created: Plan = {
         id: demoDb.newId(),
         name: plan.name,
         price: plan.price ?? 0,
         duration_days: plan.duration_days ?? 30,
+        sessions_per_period: plan.sessions_per_period ?? 12,
         description: plan.description ?? null,
         created_at: new Date().toISOString(),
       };
@@ -218,14 +223,16 @@ export async function listAttendance(): Promise<AttendanceRecord[]> {
 
 export async function checkInClient(
   clientId: string,
+  dateISO: string,
   notes?: string
 ): Promise<AttendanceRecord> {
+  const checkedInAt = dateISO === todayISO() ? new Date().toISOString() : `${dateISO}T12:00:00.000Z`;
   if (usingDemoData) {
     const db = demoDb.get();
     const created: AttendanceRecord = {
       id: demoDb.newId(),
       client_id: clientId,
-      checked_in_at: new Date().toISOString(),
+      checked_in_at: checkedInAt,
       notes: notes ?? null,
     };
     db.attendance.push(created);
@@ -234,7 +241,7 @@ export async function checkInClient(
   }
   const { data, error } = await supabase!
     .from("attendance")
-    .insert({ client_id: clientId, notes: notes ?? null })
+    .insert({ client_id: clientId, checked_in_at: checkedInAt, notes: notes ?? null })
     .select("*, client:clients(*)")
     .single();
   if (error) throw error;
@@ -252,13 +259,54 @@ export async function deleteAttendance(id: string): Promise<void> {
   if (error) throw error;
 }
 
+// ---------- Shared period/plan helpers ----------
+
+export function findPeriodForDate(
+  payments: Payment[],
+  clientId: string,
+  referenceDate: string
+): Payment | null {
+  const clientPayments = payments.filter((p) => p.client_id === clientId);
+  return (
+    clientPayments.find((p) => p.period_start <= referenceDate && referenceDate <= p.period_end) ?? null
+  );
+}
+
+export function findLatestPeriod(payments: Payment[], clientId: string): Payment | null {
+  const clientPayments = payments.filter((p) => p.client_id === clientId);
+  if (clientPayments.length === 0) return null;
+  return clientPayments.reduce((a, b) => (a.period_end > b.period_end ? a : b));
+}
+
+export function sessionsUsedInPeriod(
+  attendance: AttendanceRecord[],
+  clientId: string,
+  period: Payment
+): number {
+  return attendance.filter(
+    (a) =>
+      a.client_id === clientId &&
+      a.checked_in_at.slice(0, 10) >= period.period_start &&
+      a.checked_in_at.slice(0, 10) <= period.period_end
+  ).length;
+}
+
+export function planForPeriod(
+  period: Payment,
+  plans: Plan[],
+  fallback?: Plan | null
+): Plan | null {
+  return plans.find((p) => p.id === period.plan_id) ?? fallback ?? null;
+}
+
 // ---------- Dashboard ----------
 
 export async function getDashboardSummary(): Promise<DashboardSummary> {
-  const [clients, payments, attendance] = await Promise.all([
+  const [clients, payments, attendance, plans] = await Promise.all([
     listClients(),
     listPayments(),
     listAttendance(),
+    listPlans(),
   ]);
 
   const today = todayISO();
@@ -276,13 +324,24 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
   const activeClients = clients.filter((c) => c.status === "active");
 
   const overdueClients = activeClients.filter((client) => {
-    const clientPayments = payments.filter((p) => p.client_id === client.id);
-    if (clientPayments.length === 0) return true;
-    const latest = clientPayments.reduce((a, b) =>
-      a.period_end > b.period_end ? a : b
-    );
+    const latest = findLatestPeriod(payments, client.id);
+    if (!latest) return true;
     return latest.period_end < today;
   });
+
+  const clientsWithOneSessionLeft: Client[] = [];
+  const clientsWithTwoSessionsLeft: Client[] = [];
+
+  for (const client of activeClients) {
+    const period = findPeriodForDate(payments, client.id, today);
+    if (!period) continue;
+    const plan = planForPeriod(period, plans, client.plan);
+    if (!plan) continue;
+    const used = sessionsUsedInPeriod(attendance, client.id, period);
+    const remaining = plan.sessions_per_period - used;
+    if (remaining === 1) clientsWithOneSessionLeft.push(client);
+    else if (remaining === 2) clientsWithTwoSessionsLeft.push(client);
+  }
 
   return {
     totalClients: clients.length,
@@ -291,5 +350,7 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
     paymentsThisMonth: paymentsThisMonth.length,
     revenueThisMonth,
     overdueClients,
+    clientsWithOneSessionLeft,
+    clientsWithTwoSessionsLeft,
   };
 }

@@ -2,8 +2,21 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  Users,
+  CalendarCheck,
+  Wallet,
+  PartyPopper,
+  CheckCircle2,
+  CreditCard,
+  UserPlus,
+  AlertTriangle,
+} from "lucide-react";
 import StatCard from "@/components/StatCard";
 import StatusBadge from "@/components/StatusBadge";
+import Avatar from "@/components/Avatar";
+import EmptyState from "@/components/EmptyState";
+import { CardGridSkeleton } from "@/components/Skeleton";
 import { getDashboardSummary } from "@/lib/data-service";
 import { DashboardSummary } from "@/lib/types";
 import { formatCurrency } from "@/lib/format";
@@ -18,14 +31,6 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) {
-    return <p className="text-sm text-zinc-500">Cargando resumen...</p>;
-  }
-
-  if (!summary) {
-    return <p className="text-sm text-red-600">No se pudo cargar el resumen.</p>;
-  }
-
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -35,61 +40,120 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="Clientes activos" value={String(summary.activeClients)} accent="blue" />
-        <StatCard label="Clientes totales" value={String(summary.totalClients)} accent="zinc" />
-        <StatCard label="Asistencias hoy" value={String(summary.attendanceToday)} accent="green" />
-        <StatCard
-          label="Ingresos del mes"
-          value={formatCurrency(summary.revenueThisMonth)}
-          accent="green"
-        />
-      </div>
+      {loading || !summary ? (
+        <CardGridSkeleton />
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <StatCard label="Clientes activos" value={String(summary.activeClients)} icon={Users} accent="violet" />
+            <StatCard label="Clientes totales" value={String(summary.totalClients)} icon={Users} accent="blue" />
+            <StatCard label="Asistencias hoy" value={String(summary.attendanceToday)} icon={CalendarCheck} accent="green" />
+            <StatCard
+              label="Ingresos del mes"
+              value={formatCurrency(summary.revenueThisMonth)}
+              icon={Wallet}
+              accent="amber"
+            />
+          </div>
 
-      <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-semibold text-zinc-900">
-            Pagos vencidos o pendientes ({summary.overdueClients.length})
-          </h2>
-          <Link href="/payments" className="text-sm font-medium text-blue-600 hover:underline">
-            Registrar pago
-          </Link>
-        </div>
-        {summary.overdueClients.length === 0 ? (
-          <p className="text-sm text-zinc-500">Todos los clientes activos estan al dia. 🎉</p>
-        ) : (
-          <ul className="divide-y divide-zinc-100">
-            {summary.overdueClients.map((client) => (
-              <li key={client.id} className="flex items-center justify-between py-2">
-                <div>
-                  <p className="text-sm font-medium text-zinc-900">{client.full_name}</p>
-                  <p className="text-xs text-zinc-500">{client.plan?.name ?? "Sin plan"}</p>
-                </div>
-                <StatusBadge status={client.status} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+          <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-semibold text-zinc-900">
+                Pagos vencidos o pendientes ({summary.overdueClients.length})
+              </h2>
+              <Link href="/payments" className="text-sm font-medium text-violet-600 hover:underline">
+                Registrar pago
+              </Link>
+            </div>
+            {summary.overdueClients.length === 0 ? (
+              <EmptyState
+                icon={PartyPopper}
+                title="Todos al dia"
+                description="Ningun cliente activo tiene pagos vencidos."
+              />
+            ) : (
+              <ul className="divide-y divide-zinc-100">
+                {summary.overdueClients.map((client) => (
+                  <li key={client.id} className="flex items-center justify-between py-2.5">
+                    <div className="flex items-center gap-3">
+                      <Avatar name={client.full_name} size={36} />
+                      <div>
+                        <p className="text-sm font-medium text-zinc-900">{client.full_name}</p>
+                        <p className="text-xs text-zinc-500">{client.plan?.name ?? "Sin plan"}</p>
+                      </div>
+                    </div>
+                    <StatusBadge status={client.status} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {(summary.clientsWithOneSessionLeft.length > 0 || summary.clientsWithTwoSessionsLeft.length > 0) && (
+            <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+              <h2 className="mb-3 font-semibold text-zinc-900">Por renovar pronto</h2>
+              <ul className="divide-y divide-zinc-100">
+                {summary.clientsWithOneSessionLeft.map((client) => (
+                  <li key={client.id} className="flex items-center justify-between py-2.5">
+                    <div className="flex items-center gap-3">
+                      <Avatar name={client.full_name} size={36} />
+                      <div>
+                        <p className="text-sm font-medium text-zinc-900">{client.full_name}</p>
+                        <p className="text-xs text-zinc-500">{client.plan?.name ?? "Sin plan"}</p>
+                      </div>
+                    </div>
+                    <span className="flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">
+                      <AlertTriangle size={12} /> Le queda 1 sesion
+                    </span>
+                  </li>
+                ))}
+                {summary.clientsWithTwoSessionsLeft.map((client) => (
+                  <li key={client.id} className="flex items-center justify-between py-2.5">
+                    <div className="flex items-center gap-3">
+                      <Avatar name={client.full_name} size={36} />
+                      <div>
+                        <p className="text-sm font-medium text-zinc-900">{client.full_name}</p>
+                        <p className="text-xs text-zinc-500">{client.plan?.name ?? "Sin plan"}</p>
+                      </div>
+                    </div>
+                    <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+                      <AlertTriangle size={12} /> Le quedan 2 sesiones
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
+      )}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Link
           href="/attendance"
-          className="rounded-xl border border-zinc-200 bg-white p-4 text-sm font-medium text-zinc-900 shadow-sm hover:border-zinc-300"
+          className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white p-4 text-sm font-medium text-zinc-900 shadow-sm transition-shadow hover:shadow-md"
         >
-          ✅ Marcar asistencia
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+            <CheckCircle2 size={18} />
+          </span>
+          Marcar asistencia
         </Link>
         <Link
           href="/payments"
-          className="rounded-xl border border-zinc-200 bg-white p-4 text-sm font-medium text-zinc-900 shadow-sm hover:border-zinc-300"
+          className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white p-4 text-sm font-medium text-zinc-900 shadow-sm transition-shadow hover:shadow-md"
         >
-          💳 Registrar pago
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+            <CreditCard size={18} />
+          </span>
+          Registrar pago
         </Link>
         <Link
           href="/clients"
-          className="rounded-xl border border-zinc-200 bg-white p-4 text-sm font-medium text-zinc-900 shadow-sm hover:border-zinc-300"
+          className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white p-4 text-sm font-medium text-zinc-900 shadow-sm transition-shadow hover:shadow-md"
         >
-          👤 Agregar cliente
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
+            <UserPlus size={18} />
+          </span>
+          Agregar cliente
         </Link>
       </div>
     </div>

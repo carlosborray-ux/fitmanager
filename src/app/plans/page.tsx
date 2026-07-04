@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ClipboardList, Pencil, Plus, Trash2 } from "lucide-react";
 import Modal from "@/components/Modal";
-import { deletePlan, listPlans, savePlan } from "@/lib/data-service";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import EmptyState from "@/components/EmptyState";
+import { CardGridSkeleton } from "@/components/Skeleton";
+import { MAX_PLANS, deletePlan, listPlans, savePlan } from "@/lib/data-service";
 import { formatCurrency } from "@/lib/format";
 import { Plan } from "@/lib/types";
 
@@ -11,6 +15,7 @@ const emptyForm = {
   name: "",
   price: "",
   duration_days: "30",
+  sessions_per_period: "12",
   description: "",
 };
 
@@ -19,6 +24,7 @@ export default function PlansPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [deleteTarget, setDeleteTarget] = useState<Plan | null>(null);
 
   async function refresh() {
     setPlans(await listPlans());
@@ -27,6 +33,8 @@ export default function PlansPage() {
   useEffect(() => {
     refresh().finally(() => setLoading(false));
   }, []);
+
+  const atLimit = plans.length >= MAX_PLANS;
 
   function openNew() {
     setForm(emptyForm);
@@ -39,6 +47,7 @@ export default function PlansPage() {
       name: plan.name,
       price: String(plan.price),
       duration_days: String(plan.duration_days),
+      sessions_per_period: String(plan.sessions_per_period),
       description: plan.description ?? "",
     });
     setShowModal(true);
@@ -52,15 +61,17 @@ export default function PlansPage() {
       name: form.name.trim(),
       price: Number(form.price) || 0,
       duration_days: Number(form.duration_days) || 30,
+      sessions_per_period: Number(form.sessions_per_period) || 1,
       description: form.description || null,
     });
     setShowModal(false);
     await refresh();
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("¿Eliminar este plan? Los clientes que lo tengan asignado quedaran sin plan.")) return;
-    await deletePlan(id);
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    await deletePlan(deleteTarget.id);
+    setDeleteTarget(null);
     await refresh();
   }
 
@@ -69,45 +80,57 @@ export default function PlansPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900">Planes</h1>
-          <p className="text-sm text-zinc-500">Membresias que ofreces a tus clientes</p>
+          <p className="text-sm text-zinc-500">
+            {plans.length} de {MAX_PLANS} planes usados
+          </p>
         </div>
-        <button
-          onClick={openNew}
-          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
-        >
-          + Nuevo plan
+        <button onClick={openNew} disabled={atLimit} className="btn-primary" title={atLimit ? `Ya tienes el maximo de ${MAX_PLANS} planes` : undefined}>
+          <Plus size={16} /> Nuevo plan
         </button>
       </div>
 
+      {atLimit && (
+        <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          Alcanzaste el limite de {MAX_PLANS} planes. Elimina uno que ya no uses para crear otro.
+        </p>
+      )}
+
       {loading ? (
-        <p className="text-sm text-zinc-500">Cargando...</p>
+        <CardGridSkeleton count={2} />
       ) : plans.length === 0 ? (
-        <p className="text-sm text-zinc-500">Aun no has creado planes.</p>
+        <EmptyState icon={ClipboardList} title="Aun no has creado planes" description="Crea tu primera membresia para asignarla a clientes." />
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {plans.map((plan) => (
-            <div key={plan.id} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+            <div
+              key={plan.id}
+              className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+            >
               <div className="flex items-start justify-between">
                 <div>
                   <p className="font-semibold text-zinc-900">{plan.name}</p>
-                  <p className="text-sm text-emerald-700">{formatCurrency(plan.price)}</p>
-                  <p className="text-xs text-zinc-500">Cada {plan.duration_days} dias</p>
+                  <p className="text-sm font-medium text-emerald-700">{formatCurrency(plan.price)}</p>
+                  <p className="text-xs text-zinc-500">
+                    Cada {plan.duration_days} dias · {plan.sessions_per_period} sesiones incluidas
+                  </p>
                   {plan.description && (
                     <p className="mt-1 text-xs text-zinc-500">{plan.description}</p>
                   )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-1">
                   <button
                     onClick={() => openEdit(plan)}
-                    className="text-xs font-medium text-zinc-600 hover:underline"
+                    className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100"
+                    aria-label="Editar plan"
                   >
-                    Editar
+                    <Pencil size={14} />
                   </button>
                   <button
-                    onClick={() => handleDelete(plan.id)}
-                    className="text-xs font-medium text-red-600 hover:underline"
+                    onClick={() => setDeleteTarget(plan)}
+                    className="rounded-lg p-1.5 text-red-500 hover:bg-red-50"
+                    aria-label="Eliminar plan"
                   >
-                    Eliminar
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>
@@ -148,6 +171,15 @@ export default function PlansPage() {
                 />
               </Field>
             </div>
+            <Field label="Sesiones incluidas por periodo">
+              <input
+                type="number"
+                min={1}
+                value={form.sessions_per_period}
+                onChange={(e) => setForm({ ...form, sessions_per_period: e.target.value })}
+                className="input"
+              />
+            </Field>
             <Field label="Descripcion">
               <textarea
                 value={form.description}
@@ -156,14 +188,20 @@ export default function PlansPage() {
                 rows={2}
               />
             </Field>
-            <button
-              type="submit"
-              className="mt-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
-            >
+            <button type="submit" className="btn-primary mt-2 justify-center">
               Guardar
             </button>
           </form>
         </Modal>
+      )}
+
+      {deleteTarget && (
+        <ConfirmDialog
+          title="Eliminar plan"
+          description={`¿Eliminar "${deleteTarget.name}"? Los clientes que lo tengan asignado quedaran sin plan, los pagos ya registrados con este plan perderan esa referencia, y no se podra deshacer.`}
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
       )}
     </div>
   );

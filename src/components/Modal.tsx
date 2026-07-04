@@ -1,6 +1,7 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
+import { X } from "lucide-react";
 
 export default function Modal({
   title,
@@ -11,9 +12,26 @@ export default function Modal({
   onClose: () => void;
   children: ReactNode;
 }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4">
-      <div className="w-full max-h-[90vh] overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl sm:max-w-lg sm:rounded-2xl">
+    <div
+      className={`fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-[2px] p-0 transition-opacity duration-200 sm:items-center sm:p-4 ${
+        visible ? "opacity-100" : "opacity-0"
+      }`}
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`w-full max-h-[90vh] overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl transition-all duration-200 sm:max-w-lg sm:rounded-2xl ${
+          visible ? "translate-y-0 opacity-100 sm:scale-100" : "translate-y-4 opacity-0 sm:scale-95"
+        }`}
+      >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-zinc-900">{title}</h2>
           <button
@@ -21,7 +39,7 @@ export default function Modal({
             className="rounded-full p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
             aria-label="Cerrar"
           >
-            ✕
+            <X size={18} />
           </button>
         </div>
         {children}

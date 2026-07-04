@@ -1,15 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { CreditCard, Trash2, Wallet } from "lucide-react";
 import Modal from "@/components/Modal";
+import Avatar from "@/components/Avatar";
+import EmptyState from "@/components/EmptyState";
+import { ListSkeleton } from "@/components/Skeleton";
 import {
   createPayment,
   deletePayment,
   listClients,
   listPayments,
+  listPlans,
 } from "@/lib/data-service";
 import { addDaysISO, formatCurrency, formatDate, todayISO } from "@/lib/format";
-import { Client, Payment, PaymentMethod } from "@/lib/types";
+import { Client, Payment, PaymentMethod, Plan } from "@/lib/types";
 
 const methodLabels: Record<PaymentMethod, string> = {
   cash: "Efectivo",
@@ -21,10 +26,12 @@ const methodLabels: Record<PaymentMethod, string> = {
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
   const [clientId, setClientId] = useState("");
+  const [planId, setPlanId] = useState("");
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<PaymentMethod>("cash");
   const [paymentDate, setPaymentDate] = useState(todayISO());
@@ -32,26 +39,37 @@ export default function PaymentsPage() {
   const [notes, setNotes] = useState("");
 
   async function refresh() {
-    const [p, c] = await Promise.all([listPayments(), listClients()]);
+    const [p, c, pl] = await Promise.all([listPayments(), listClients(), listPlans()]);
     setPayments(p);
     setClients(c);
+    setPlans(pl);
   }
 
   useEffect(() => {
     refresh().finally(() => setLoading(false));
   }, []);
 
-  const selectedClient = useMemo(
-    () => clients.find((c) => c.id === clientId),
-    [clients, clientId]
-  );
+  const plansById = useMemo(() => new Map(plans.map((p) => [p.id, p])), [plans]);
+
+  function applyPlan(id: string) {
+    setPlanId(id);
+    const plan = plansById.get(id);
+    if (plan) {
+      setAmount(String(plan.price));
+      setDurationDays(plan.duration_days);
+    }
+  }
 
   function openNew() {
-    setClientId(clients[0]?.id ?? "");
-    setAmount(clients[0]?.plan?.price ? String(clients[0].plan.price) : "");
+    const firstClient = clients[0];
+    setClientId(firstClient?.id ?? "");
+    const defaultPlanId = firstClient?.plan_id ?? plans[0]?.id ?? "";
+    setPlanId(defaultPlanId);
+    const plan = plansById.get(defaultPlanId);
+    setAmount(plan ? String(plan.price) : "");
     setMethod("cash");
     setPaymentDate(todayISO());
-    setDurationDays(clients[0]?.plan?.duration_days ?? 30);
+    setDurationDays(plan?.duration_days ?? 30);
     setNotes("");
     setShowModal(true);
   }
@@ -59,18 +77,17 @@ export default function PaymentsPage() {
   function handleClientChange(id: string) {
     setClientId(id);
     const client = clients.find((c) => c.id === id);
-    if (client?.plan) {
-      setAmount(String(client.plan.price));
-      setDurationDays(client.plan.duration_days);
+    if (client?.plan_id) {
+      applyPlan(client.plan_id);
     }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!clientId || !amount) return;
+    if (!clientId || !amount || !planId) return;
     await createPayment({
       client_id: clientId,
-      plan_id: selectedClient?.plan_id ?? null,
+      plan_id: planId,
       amount: Number(amount),
       payment_date: paymentDate,
       period_start: paymentDate,
@@ -88,6 +105,8 @@ export default function PaymentsPage() {
     await refresh();
   }
 
+  const canRegister = clients.length > 0 && plans.length > 0;
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -97,30 +116,35 @@ export default function PaymentsPage() {
         </div>
         <button
           onClick={openNew}
-          disabled={clients.length === 0}
-          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
+          disabled={!canRegister}
+          className="btn-primary"
+          title={!canRegister ? "Necesitas al menos un cliente y un plan creados" : undefined}
         >
-          + Registrar pago
+          <CreditCard size={16} /> Registrar pago
         </button>
       </div>
 
       {loading ? (
-        <p className="text-sm text-zinc-500">Cargando...</p>
+        <ListSkeleton />
       ) : payments.length === 0 ? (
-        <p className="text-sm text-zinc-500">Aun no hay pagos registrados.</p>
+        <EmptyState icon={Wallet} title="Aun no hay pagos registrados" description="Registra el primer pago de un cliente." />
       ) : (
         <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
           <ul className="divide-y divide-zinc-100">
             {payments.map((payment) => (
-              <li key={payment.id} className="flex items-center justify-between p-4">
-                <div>
-                  <p className="font-medium text-zinc-900">
-                    {payment.client?.full_name ?? "Cliente eliminado"}
-                  </p>
-                  <p className="text-xs text-zinc-500">
-                    {formatDate(payment.payment_date)} · {methodLabels[payment.method]} · Cubre
-                    hasta {formatDate(payment.period_end)}
-                  </p>
+              <li key={payment.id} className="flex items-center justify-between gap-3 p-4">
+                <div className="flex items-center gap-3">
+                  <Avatar name={payment.client?.full_name ?? "?"} />
+                  <div>
+                    <p className="font-medium text-zinc-900">
+                      {payment.client?.full_name ?? "Cliente eliminado"}
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      {plansById.get(payment.plan_id ?? "")?.name ?? "Sin plan"} ·{" "}
+                      {formatDate(payment.payment_date)} · {methodLabels[payment.method]} · Cubre
+                      hasta {formatDate(payment.period_end)}
+                    </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <p className="font-semibold text-emerald-700">
@@ -128,9 +152,10 @@ export default function PaymentsPage() {
                   </p>
                   <button
                     onClick={() => handleDelete(payment.id)}
-                    className="text-xs font-medium text-red-600 hover:underline"
+                    className="rounded-lg p-1.5 text-red-500 hover:bg-red-50"
+                    aria-label="Eliminar pago"
                   >
-                    Eliminar
+                    <Trash2 size={15} />
                   </button>
                 </div>
               </li>
@@ -152,6 +177,20 @@ export default function PaymentsPage() {
                 {clients.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.full_name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Plan *">
+              <select
+                required
+                value={planId}
+                onChange={(e) => applyPlan(e.target.value)}
+                className="input"
+              >
+                {plans.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
                   </option>
                 ))}
               </select>
@@ -207,10 +246,7 @@ export default function PaymentsPage() {
                 rows={2}
               />
             </Field>
-            <button
-              type="submit"
-              className="mt-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
-            >
+            <button type="submit" className="btn-primary mt-2 justify-center">
               Guardar pago
             </button>
           </form>

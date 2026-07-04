@@ -20,6 +20,7 @@ function seed(): DemoDb {
     name: "Plan Basico (8 sesiones/mes)",
     price: 180000,
     duration_days: 30,
+    sessions_per_period: 8,
     description: "2 sesiones por semana",
     created_at: new Date().toISOString(),
   };
@@ -28,6 +29,7 @@ function seed(): DemoDb {
     name: "Plan Premium (12 sesiones/mes)",
     price: 260000,
     duration_days: 30,
+    sessions_per_period: 12,
     description: "3 sesiones por semana + seguimiento nutricional",
     created_at: new Date().toISOString(),
   };

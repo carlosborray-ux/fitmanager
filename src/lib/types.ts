@@ -6,6 +6,7 @@ export interface Plan {
   name: string;
   price: number;
   duration_days: number;
+  sessions_per_period: number;
   description: string | null;
   created_at: string;
 }
@@ -53,4 +54,6 @@ export interface DashboardSummary {
   paymentsThisMonth: number;
   revenueThisMonth: number;
   overdueClients: Client[];
+  clientsWithOneSessionLeft: Client[];
+  clientsWithTwoSessionsLeft: Client[];
 }

@@ -10,6 +10,7 @@ create table if not exists plans (
   name text not null,
   price numeric(10,2) not null default 0,
   duration_days integer not null default 30,
+  sessions_per_period integer not null default 12,
   description text,
   created_at timestamptz not null default now()
 );

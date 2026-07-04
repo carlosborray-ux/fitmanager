@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Pencil, Search, Trash2, UserPlus, Users } from "lucide-react";
 import Modal from "@/components/Modal";
 import StatusBadge from "@/components/StatusBadge";
+import Avatar from "@/components/Avatar";
+import EmptyState from "@/components/EmptyState";
+import { ListSkeleton } from "@/components/Skeleton";
 import {
   deleteClient,
   listClients,
@@ -94,56 +98,57 @@ export default function ClientsPage() {
           <h1 className="text-2xl font-bold text-zinc-900">Clientes</h1>
           <p className="text-sm text-zinc-500">{clients.length} clientes registrados</p>
         </div>
-        <button
-          onClick={openNew}
-          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
-        >
-          + Nuevo cliente
+        <button onClick={openNew} className="btn-primary">
+          <UserPlus size={16} /> Nuevo cliente
         </button>
       </div>
 
-      <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Buscar por nombre..."
-        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
-      />
+      <div className="relative">
+        <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar por nombre..."
+          className="input pl-9"
+        />
+      </div>
 
       {loading ? (
-        <p className="text-sm text-zinc-500">Cargando...</p>
+        <ListSkeleton />
       ) : filtered.length === 0 ? (
-        <p className="text-sm text-zinc-500">No hay clientes que coincidan.</p>
+        <EmptyState
+          icon={Users}
+          title="No hay clientes que coincidan"
+          description="Prueba con otro nombre o agrega un nuevo cliente."
+        />
       ) : (
         <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
           <ul className="divide-y divide-zinc-100">
             {filtered.map((client) => (
-              <li key={client.id} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-zinc-900">{client.full_name}</p>
-                    <StatusBadge status={client.status} />
-                  </div>
-                  <p className="text-xs text-zinc-500">
-                    {client.plan?.name ?? "Sin plan"} · Desde {formatDate(client.start_date)}
-                  </p>
-                  {(client.phone || client.email) && (
-                    <p className="text-xs text-zinc-400">
-                      {[client.phone, client.email].filter(Boolean).join(" · ")}
+              <li key={client.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <Avatar name={client.full_name} />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-zinc-900">{client.full_name}</p>
+                      <StatusBadge status={client.status} />
+                    </div>
+                    <p className="text-xs text-zinc-500">
+                      {client.plan?.name ?? "Sin plan"} · Desde {formatDate(client.start_date)}
                     </p>
-                  )}
+                    {(client.phone || client.email) && (
+                      <p className="text-xs text-zinc-400">
+                        {[client.phone, client.email].filter(Boolean).join(" · ")}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => openEdit(client)}
-                    className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
-                  >
-                    Editar
+                <div className="flex gap-2 pl-[52px] sm:pl-0">
+                  <button onClick={() => openEdit(client)} className="btn-secondary">
+                    <Pencil size={13} /> Editar
                   </button>
-                  <button
-                    onClick={() => handleDelete(client.id)}
-                    className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
-                  >
-                    Eliminar
+                  <button onClick={() => handleDelete(client.id)} className="btn-danger">
+                    <Trash2 size={13} /> Eliminar
                   </button>
                 </div>
               </li>
@@ -223,10 +228,7 @@ export default function ClientsPage() {
                 rows={2}
               />
             </Field>
-            <button
-              type="submit"
-              className="mt-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
-            >
+            <button type="submit" className="btn-primary mt-2 justify-center">
               Guardar
             </button>
           </form>
