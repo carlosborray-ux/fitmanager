@@ -3,11 +3,22 @@ import { addDaysISO, todayISO } from "./format";
 
 const STORAGE_KEY = "gym-trainer-demo-db";
 
+export interface ClassSessionRaw {
+  id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  title: string | null;
+  created_at: string;
+  client_ids: string[];
+}
+
 interface DemoDb {
   plans: Plan[];
   clients: Client[];
   payments: Payment[];
   attendance: AttendanceRecord[];
+  classSessions: ClassSessionRaw[];
 }
 
 function uid(): string {
@@ -147,7 +158,28 @@ function seed(): DemoDb {
     },
   ];
 
-  return { plans: [planBasico, planPremium], clients, payments, attendance };
+  const classSessions: ClassSessionRaw[] = [
+    {
+      id: uid(),
+      date: addDaysISO(today, 1),
+      start_time: "07:00",
+      end_time: "08:00",
+      title: "Clase grupal de fuerza",
+      created_at: new Date().toISOString(),
+      client_ids: [clients[0].id, clients[1].id],
+    },
+    {
+      id: uid(),
+      date: addDaysISO(today, 2),
+      start_time: "18:00",
+      end_time: "19:00",
+      title: null,
+      created_at: new Date().toISOString(),
+      client_ids: [clients[2].id],
+    },
+  ];
+
+  return { plans: [planBasico, planPremium], clients, payments, attendance, classSessions };
 }
 
 function load(): DemoDb {
@@ -161,7 +193,9 @@ function load(): DemoDb {
     return fresh;
   }
   try {
-    return JSON.parse(raw) as DemoDb;
+    const parsed = JSON.parse(raw) as DemoDb;
+    if (!parsed.classSessions) parsed.classSessions = [];
+    return parsed;
   } catch {
     const fresh = seed();
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));

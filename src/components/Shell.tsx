@@ -10,6 +10,7 @@ import {
   Users,
   CreditCard,
   CalendarCheck,
+  CalendarDays,
   ClipboardList,
   LogOut,
 } from "lucide-react";
@@ -19,6 +20,7 @@ import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
 const NAV_ITEMS = [
   { href: "/", label: "Resumen", Icon: LayoutDashboard },
   { href: "/clients", label: "Clientes", Icon: Users },
+  { href: "/calendar", label: "Calendario", Icon: CalendarDays },
   { href: "/payments", label: "Pagos", Icon: CreditCard },
   { href: "/attendance", label: "Asistencia", Icon: CalendarCheck },
   { href: "/plans", label: "Planes", Icon: ClipboardList },

@@ -56,12 +56,36 @@ create table if not exists fitmanager_attendance (
   notes text
 );
 
+-- Clases agendadas en el calendario (una clase puede tener varios clientes, ej. clases grupales)
+create table if not exists fitmanager_class_sessions (
+  id uuid primary key default gen_random_uuid(),
+  trainer_id uuid not null default auth.uid(),
+  date date not null,
+  start_time time not null,
+  end_time time not null,
+  title text,
+  created_at timestamptz not null default now()
+);
+
+-- Relacion clase <-> clientes que asisten (permite 2 o mas clientes por clase)
+create table if not exists fitmanager_session_attendees (
+  session_id uuid not null references fitmanager_class_sessions(id) on delete cascade,
+  client_id uuid not null references fitmanager_clients(id) on delete cascade,
+  trainer_id uuid not null default auth.uid(),
+  primary key (session_id, client_id)
+);
+
 create index if not exists idx_fitmanager_clients_trainer on fitmanager_clients(trainer_id);
 create index if not exists idx_fitmanager_payments_trainer on fitmanager_payments(trainer_id);
 create index if not exists idx_fitmanager_payments_client on fitmanager_payments(client_id);
 create index if not exists idx_fitmanager_attendance_trainer on fitmanager_attendance(trainer_id);
 create index if not exists idx_fitmanager_attendance_client on fitmanager_attendance(client_id);
 create index if not exists idx_fitmanager_plans_trainer on fitmanager_plans(trainer_id);
+create index if not exists idx_fitmanager_class_sessions_trainer on fitmanager_class_sessions(trainer_id);
+create index if not exists idx_fitmanager_class_sessions_date on fitmanager_class_sessions(date);
+create index if not exists idx_fitmanager_session_attendees_trainer on fitmanager_session_attendees(trainer_id);
+create index if not exists idx_fitmanager_session_attendees_session on fitmanager_session_attendees(session_id);
+create index if not exists idx_fitmanager_session_attendees_client on fitmanager_session_attendees(client_id);
 
 -- =============================================================
 -- Row Level Security: cada entrenador solo ve sus propios datos
@@ -70,6 +94,8 @@ alter table fitmanager_plans enable row level security;
 alter table fitmanager_clients enable row level security;
 alter table fitmanager_payments enable row level security;
 alter table fitmanager_attendance enable row level security;
+alter table fitmanager_class_sessions enable row level security;
+alter table fitmanager_session_attendees enable row level security;
 
 create policy "fitmanager_plans_owner_all" on fitmanager_plans
   for all using (trainer_id = auth.uid()) with check (trainer_id = auth.uid());
@@ -81,4 +107,10 @@ create policy "fitmanager_payments_owner_all" on fitmanager_payments
   for all using (trainer_id = auth.uid()) with check (trainer_id = auth.uid());
 
 create policy "fitmanager_attendance_owner_all" on fitmanager_attendance
+  for all using (trainer_id = auth.uid()) with check (trainer_id = auth.uid());
+
+create policy "fitmanager_class_sessions_owner_all" on fitmanager_class_sessions
+  for all using (trainer_id = auth.uid()) with check (trainer_id = auth.uid());
+
+create policy "fitmanager_session_attendees_owner_all" on fitmanager_session_attendees
   for all using (trainer_id = auth.uid()) with check (trainer_id = auth.uid());

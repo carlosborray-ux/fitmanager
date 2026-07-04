@@ -1,8 +1,10 @@
 import { isSupabaseConfigured, supabase } from "./supabase/client";
 import { demoDb } from "./demo-data";
+import type { ClassSessionRaw } from "./demo-data";
 import {
   AttendanceRecord,
   Client,
+  ClassSession,
   DashboardSummary,
   Payment,
   Plan,
@@ -18,6 +20,8 @@ const TABLES = {
   clients: "fitmanager_clients",
   payments: "fitmanager_payments",
   attendance: "fitmanager_attendance",
+  classSessions: "fitmanager_class_sessions",
+  sessionAttendees: "fitmanager_session_attendees",
 } as const;
 
 function sortByCreatedDesc<T extends { created_at: string }>(rows: T[]): T[] {
@@ -264,6 +268,155 @@ export async function deleteAttendance(id: string): Promise<void> {
     return;
   }
   const { error } = await supabase!.from(TABLES.attendance).delete().eq("id", id);
+  if (error) throw error;
+}
+
+// ---------- Class Sessions (calendario) ----------
+
+function resolveSession(session: ClassSessionRaw, clients: Client[]): ClassSession {
+  return {
+    id: session.id,
+    date: session.date,
+    start_time: session.start_time,
+    end_time: session.end_time,
+    title: session.title,
+    created_at: session.created_at,
+    clients: session.client_ids
+      .map((id) => clients.find((c) => c.id === id))
+      .filter((c): c is Client => Boolean(c)),
+  };
+}
+
+export async function listClassSessions(): Promise<ClassSession[]> {
+  if (usingDemoData) {
+    const db = demoDb.get();
+    return [...db.classSessions]
+      .sort((a, b) => (a.date + a.start_time < b.date + b.start_time ? -1 : 1))
+      .map((s) => resolveSession(s, db.clients));
+  }
+  const { data, error } = await supabase!
+    .from(TABLES.classSessions)
+    .select(`*, attendees:${TABLES.sessionAttendees}(client:${TABLES.clients}(*))`)
+    .order("date", { ascending: true })
+    .order("start_time", { ascending: true });
+  if (error) throw error;
+  return (data as Array<Record<string, unknown>>).map((row) => ({
+    id: row.id as string,
+    date: row.date as string,
+    start_time: (row.start_time as string).slice(0, 5),
+    end_time: (row.end_time as string).slice(0, 5),
+    title: row.title as string | null,
+    created_at: row.created_at as string,
+    clients: (row.attendees as Array<{ client: Client }>).map((a) => a.client),
+  }));
+}
+
+export async function saveClassSession(session: {
+  id?: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  title: string | null;
+  client_ids: string[];
+}): Promise<ClassSession> {
+  if (usingDemoData) {
+    const db = demoDb.get();
+    if (session.id) {
+      db.classSessions = db.classSessions.map((s) =>
+        s.id === session.id
+          ? {
+              ...s,
+              date: session.date,
+              start_time: session.start_time,
+              end_time: session.end_time,
+              title: session.title,
+              client_ids: session.client_ids,
+            }
+          : s
+      );
+    } else {
+      db.classSessions.push({
+        id: demoDb.newId(),
+        date: session.date,
+        start_time: session.start_time,
+        end_time: session.end_time,
+        title: session.title,
+        client_ids: session.client_ids,
+        created_at: new Date().toISOString(),
+      });
+    }
+    demoDb.set(db);
+    const saved = db.classSessions.find((s) =>
+      session.id ? s.id === session.id : s.date === session.date && s.start_time === session.start_time
+    )!;
+    return resolveSession(saved, db.clients);
+  }
+
+  let sessionId = session.id;
+  if (sessionId) {
+    const { error } = await supabase!
+      .from(TABLES.classSessions)
+      .update({
+        date: session.date,
+        start_time: session.start_time,
+        end_time: session.end_time,
+        title: session.title,
+      })
+      .eq("id", sessionId);
+    if (error) throw error;
+    const { error: deleteError } = await supabase!
+      .from(TABLES.sessionAttendees)
+      .delete()
+      .eq("session_id", sessionId);
+    if (deleteError) throw deleteError;
+  } else {
+    const { data, error } = await supabase!
+      .from(TABLES.classSessions)
+      .insert({
+        date: session.date,
+        start_time: session.start_time,
+        end_time: session.end_time,
+        title: session.title,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    sessionId = (data as { id: string }).id;
+  }
+
+  if (session.client_ids.length > 0) {
+    const { error: insertError } = await supabase!
+      .from(TABLES.sessionAttendees)
+      .insert(session.client_ids.map((clientId) => ({ session_id: sessionId, client_id: clientId })));
+    if (insertError) throw insertError;
+  }
+
+  const { data, error } = await supabase!
+    .from(TABLES.classSessions)
+    .select(`*, attendees:${TABLES.sessionAttendees}(client:${TABLES.clients}(*))`)
+    .eq("id", sessionId)
+    .single();
+  if (error) throw error;
+  const row = data as Record<string, unknown>;
+  return {
+    id: row.id as string,
+    date: row.date as string,
+    start_time: (row.start_time as string).slice(0, 5),
+    end_time: (row.end_time as string).slice(0, 5),
+    title: row.title as string | null,
+    created_at: row.created_at as string,
+    clients: (row.attendees as Array<{ client: Client }>).map((a) => a.client),
+  };
+}
+
+export async function deleteClassSession(id: string): Promise<void> {
+  if (usingDemoData) {
+    const db = demoDb.get();
+    db.classSessions = db.classSessions.filter((s) => s.id !== id);
+    demoDb.set(db);
+    return;
+  }
+  const { error } = await supabase!.from(TABLES.classSessions).delete().eq("id", id);
   if (error) throw error;
 }
 

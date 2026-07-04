@@ -47,6 +47,16 @@ export interface AttendanceRecord {
   client?: Client | null;
 }
 
+export interface ClassSession {
+  id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  title: string | null;
+  created_at: string;
+  clients: Client[];
+}
+
 export interface DashboardSummary {
   totalClients: number;
   activeClients: number;
