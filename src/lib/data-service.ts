@@ -7,6 +7,7 @@ import {
   ClassSession,
   DashboardSummary,
   Payment,
+  PaymentMethod,
   Plan,
 } from "./types";
 import { todayISO } from "./format";
@@ -182,27 +183,47 @@ export async function listPayments(): Promise<Payment[]> {
   return data as Payment[];
 }
 
-export async function createPayment(
-  payment: Omit<Payment, "id" | "created_at" | "client">
-): Promise<Payment> {
+export async function createPaymentInstallments(input: {
+  client_id: string;
+  plan_id: string | null;
+  period_start: string;
+  period_end: string;
+  method: PaymentMethod;
+  notes: string | null;
+  installments: { amount: number; payment_date: string }[];
+}): Promise<Payment[]> {
+  const groupId = usingDemoData ? demoDb.newId() : crypto.randomUUID();
+  const rows = input.installments.map((installment, i) => ({
+    client_id: input.client_id,
+    plan_id: input.plan_id,
+    amount: installment.amount,
+    payment_date: installment.payment_date,
+    period_start: input.period_start,
+    period_end: input.period_end,
+    method: input.method,
+    notes: input.notes,
+    group_id: groupId,
+    installment_number: i + 1,
+    installment_count: input.installments.length,
+  }));
+
   if (usingDemoData) {
     const db = demoDb.get();
-    const created: Payment = {
-      ...payment,
+    const created: Payment[] = rows.map((row) => ({
+      ...row,
       id: demoDb.newId(),
       created_at: new Date().toISOString(),
-    };
-    db.payments.push(created);
+    }));
+    db.payments.push(...created);
     demoDb.set(db);
-    return attachClient(created, db.clients, db.plans);
+    return created.map((p) => attachClient(p, db.clients, db.plans));
   }
   const { data, error } = await supabase!
     .from(TABLES.payments)
-    .insert(payment)
-    .select("*, client:fitmanager_clients(*)")
-    .single();
+    .insert(rows)
+    .select("*, client:fitmanager_clients(*)");
   if (error) throw error;
-  return data as Payment;
+  return data as Payment[];
 }
 
 export async function deletePayment(id: string): Promise<void> {

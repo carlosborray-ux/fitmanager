@@ -36,6 +36,9 @@ export interface Payment {
   method: PaymentMethod;
   notes: string | null;
   created_at: string;
+  group_id: string;
+  installment_number: number;
+  installment_count: number;
   client?: Client | null;
 }
 

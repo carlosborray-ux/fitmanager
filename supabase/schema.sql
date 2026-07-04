@@ -44,7 +44,10 @@ create table if not exists fitmanager_payments (
   period_end date not null,
   method text not null default 'cash' check (method in ('cash','transfer','card','other')),
   notes text,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  group_id uuid not null default gen_random_uuid(),
+  installment_number integer not null default 1,
+  installment_count integer not null default 1
 );
 
 -- Asistencias / check-ins

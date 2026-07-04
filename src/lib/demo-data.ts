@@ -110,6 +110,9 @@ function seed(): DemoDb {
       method: "transfer",
       notes: null,
       created_at: new Date().toISOString(),
+      group_id: uid(),
+      installment_number: 1,
+      installment_count: 1,
     },
     {
       id: uid(),
@@ -122,6 +125,9 @@ function seed(): DemoDb {
       method: "cash",
       notes: null,
       created_at: new Date().toISOString(),
+      group_id: uid(),
+      installment_number: 1,
+      installment_count: 1,
     },
     {
       id: uid(),
@@ -134,6 +140,9 @@ function seed(): DemoDb {
       method: "card",
       notes: null,
       created_at: new Date().toISOString(),
+      group_id: uid(),
+      installment_number: 1,
+      installment_count: 1,
     },
   ];
 
