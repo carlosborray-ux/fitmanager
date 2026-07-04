@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FitManager — Gestion de entrenador personal
 
-## Getting Started
+App web (funciona en PC y celular) para que un entrenador personal controle:
 
-First, run the development server:
+- **Clientes**: datos de contacto, plan asignado, estado (activo/pausado/inactivo)
+- **Planes**: membresias que ofreces (precio, duracion en dias)
+- **Pagos**: registro de pagos por cliente, con periodo que cubren
+- **Asistencia**: check-in diario y su historial
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Construida con **Next.js 16 + TypeScript + Tailwind CSS**, lista para conectarse a **Supabase** (base de datos + autenticacion) y desplegarse en **Vercel**.
+
+## Estado actual
+
+Hoy la app corre en **modo demo**: si no hay credenciales de Supabase configuradas, todos los datos se guardan en el `localStorage` del navegador (solo en tu computador, se pierden si borras datos del navegador). Esto permite probar toda la funcionalidad sin necesidad de una cuenta de Supabase.
+
+En cuanto agregues las credenciales reales (ver pasos abajo), la app usa Supabase automáticamente — **no hay que cambiar nada de código**.
+
+## Pasos para poner esto en producción (para el entrenador / dueño del proyecto)
+
+### 1. Crear el proyecto en Supabase
+
+1. Entra a [supabase.com](https://supabase.com) y crea una cuenta / proyecto nuevo.
+2. Ve a **SQL Editor** → **New query**, pega el contenido completo de [`supabase/schema.sql`](supabase/schema.sql) y ejecútalo. Esto crea las tablas `clients`, `plans`, `payments`, `attendance` con seguridad a nivel de fila (RLS) para que cada usuario autenticado solo vea sus propios datos.
+3. Ve a **Authentication → Providers** y asegúrate que **Email** esté habilitado.
+4. Ve a **Authentication → Users** y crea tu usuario (email + contraseña) con el que vas a iniciar sesión como entrenador.
+5. Ve a **Project Settings → API** y copia:
+   - `Project URL`
+   - `anon public key`
+
+### 2. Configurar las variables de entorno
+
+En la carpeta del proyecto, crea un archivo `.env.local` (puedes copiar `.env.example`) con:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=tu-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Correr localmente
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Abre [http://localhost:3000](http://localhost:3000).
 
-## Learn More
+### 4. Desplegar en Vercel
 
-To learn more about Next.js, take a look at the following resources:
+1. Sube este repositorio a tu cuenta de GitHub (o el proveedor Git que prefieras).
+2. En [vercel.com](https://vercel.com), importa el repositorio.
+3. En **Environment Variables**, agrega las mismas dos variables (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
+4. Deploy. Vercel te da una URL que funciona en PC y celular.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Nota sobre autenticación
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Por ahora la app **no tiene pantalla de login**: apenas conectes Supabase, todas las escrituras a la base de datos requieren que exista una sesión (por RLS), así que necesitarás agregar una pantalla simple de login con `supabase.auth.signInWithPassword`. Es un componente sencillo (~40 líneas) que ya encaja con la estructura de `src/lib/supabase/client.ts` — pide ayuda si quieres agregarlo.
 
-## Deploy on Vercel
+## Estructura del proyecto
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/
+  app/
+    page.tsx            -> Dashboard / resumen
+    clients/page.tsx     -> CRUD de clientes
+    payments/page.tsx    -> Registro y listado de pagos
+    attendance/page.tsx  -> Check-in y historial de asistencia
+    plans/page.tsx       -> CRUD de planes/membresias
+  components/            -> Shell (navegacion), Modal, StatCard, StatusBadge
+  lib/
+    types.ts             -> Tipos compartidos
+    supabase/client.ts   -> Cliente de Supabase (null si no hay credenciales)
+    demo-data.ts         -> Datos y almacenamiento de demo (localStorage)
+    data-service.ts      -> Capa unica de acceso a datos (demo o Supabase segun configuracion)
+supabase/schema.sql       -> Script SQL para crear las tablas en Supabase
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Comandos utiles
+
+```bash
+npm run dev     # servidor de desarrollo
+npm run build   # build de produccion
+npm run start   # correr el build de produccion
+```
