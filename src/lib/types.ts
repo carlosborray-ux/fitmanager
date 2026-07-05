@@ -81,4 +81,5 @@ export interface DashboardSummary {
   overdueClients: Client[];
   clientsWithOneSessionLeft: Client[];
   clientsWithTwoSessionsLeft: Client[];
+  payments: Payment[];
 }

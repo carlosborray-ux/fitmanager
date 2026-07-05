@@ -64,10 +64,11 @@ export default function AttendancePage() {
       );
       if (existing) {
         await deleteAttendance(existing.id);
+        setAttendance((prev) => prev.filter((a) => a.id !== existing.id));
       } else {
-        await checkInClient(client.id, selectedDate);
+        const created = await checkInClient(client.id, selectedDate);
+        setAttendance((prev) => [created, ...prev]);
       }
-      await refresh();
     } finally {
       setBusyId(null);
     }

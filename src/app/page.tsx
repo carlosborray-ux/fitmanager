@@ -21,30 +21,30 @@ import Avatar from "@/components/Avatar";
 import EmptyState from "@/components/EmptyState";
 import { CardGridSkeleton } from "@/components/Skeleton";
 import { MONTH_NAMES } from "@/lib/calendar-utils";
-import { getDashboardSummary, listClassSessions, listPayments } from "@/lib/data-service";
-import { ClassSession, DashboardSummary, Payment } from "@/lib/types";
+import { getDashboardSummary, listClassSessions } from "@/lib/data-service";
+import { ClassSession, DashboardSummary } from "@/lib/types";
 import { formatCurrency, todayISO } from "@/lib/format";
 
 export default function DashboardPage() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [todaySessions, setTodaySessions] = useState<ClassSession[]>([]);
-  const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [monthOffset, setMonthOffset] = useState(0);
 
   useEffect(() => {
-    Promise.all([getDashboardSummary(), listClassSessions(), listPayments()])
-      .then(([s, sessions, p]) => {
+    Promise.all([getDashboardSummary(), listClassSessions()])
+      .then(([s, sessions]) => {
         setSummary(s);
         setTodaySessions(
           sessions
             .filter((session) => session.date === todayISO())
             .sort((a, b) => (a.start_time < b.start_time ? -1 : 1))
         );
-        setPayments(p);
       })
       .finally(() => setLoading(false));
   }, []);
+
+  const payments = summary?.payments ?? [];
 
   const selectedMonthDate = useMemo(() => {
     const d = new Date(`${todayISO()}T00:00:00`);

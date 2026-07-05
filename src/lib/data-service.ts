@@ -716,5 +716,6 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
     overdueClients,
     clientsWithOneSessionLeft,
     clientsWithTwoSessionsLeft,
+    payments,
   };
 }
