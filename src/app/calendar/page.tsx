@@ -205,7 +205,10 @@ export default function CalendarPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (selectedClientIds.length === 0 && guestNames.length === 0) return;
+    const pendingGuest = guestInput.trim();
+    const finalGuestNames =
+      pendingGuest && !guestNames.includes(pendingGuest) ? [...guestNames, pendingGuest] : guestNames;
+    if (selectedClientIds.length === 0 && finalGuestNames.length === 0) return;
     const payload = {
       id: editingSession?.id,
       date: formDate,
@@ -213,7 +216,7 @@ export default function CalendarPage() {
       end_time: endTime,
       title: title || null,
       client_ids: selectedClientIds,
-      guest_names: guestNames,
+      guest_names: finalGuestNames,
     };
     if (!editingSession && repeatEnabled && repeatDays.size > 0 && repeatUntil) {
       const dates = generateRecurringDates(formDate, repeatUntil, repeatDays);
@@ -497,7 +500,9 @@ export default function CalendarPage() {
             <div className="mt-2 flex items-center gap-2">
               <button
                 type="submit"
-                disabled={selectedClientIds.length === 0 && guestNames.length === 0}
+                disabled={
+                  selectedClientIds.length === 0 && guestNames.length === 0 && guestInput.trim() === ""
+                }
                 className="btn-primary flex-1 justify-center"
               >
                 Guardar clase
