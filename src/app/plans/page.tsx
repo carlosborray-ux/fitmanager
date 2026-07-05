@@ -141,7 +141,7 @@ export default function PlansPage() {
 
       {showModal && (
         <Modal title={form.id ? "Editar plan" : "Nuevo plan"} onClose={() => setShowModal(false)}>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <form onSubmit={handleSubmit} onKeyDown={preventEnterSubmit} className="flex flex-col gap-3">
             <Field label="Nombre *">
               <input
                 required
@@ -205,6 +205,12 @@ export default function PlansPage() {
       )}
     </div>
   );
+}
+
+function preventEnterSubmit(e: React.KeyboardEvent<HTMLFormElement>) {
+  if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
+    e.preventDefault();
+  }
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

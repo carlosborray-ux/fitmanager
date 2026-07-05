@@ -301,7 +301,7 @@ export default function CalendarPage() {
 
       {formOpen && (
         <Modal title={editingSession ? "Editar clase" : "Agendar clase"} onClose={() => setFormOpen(false)}>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <form onSubmit={handleSubmit} onKeyDown={preventEnterSubmit} className="flex flex-col gap-3">
             <div className="grid grid-cols-3 gap-3">
               <Field label="Fecha">
                 <input
@@ -390,6 +390,12 @@ export default function CalendarPage() {
       )}
     </div>
   );
+}
+
+function preventEnterSubmit(e: React.KeyboardEvent<HTMLFormElement>) {
+  if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
+    e.preventDefault();
+  }
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

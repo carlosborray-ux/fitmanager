@@ -231,7 +231,7 @@ export default function PaymentsPage() {
 
       {showModal && (
         <Modal title="Registrar pago" onClose={() => setShowModal(false)}>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <form onSubmit={handleSubmit} onKeyDown={preventEnterSubmit} className="flex flex-col gap-3">
             <Field label="Cliente *">
               <select
                 required
@@ -346,6 +346,12 @@ export default function PaymentsPage() {
       )}
     </div>
   );
+}
+
+function preventEnterSubmit(e: React.KeyboardEvent<HTMLFormElement>) {
+  if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
+    e.preventDefault();
+  }
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

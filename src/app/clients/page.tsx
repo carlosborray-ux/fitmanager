@@ -159,7 +159,7 @@ export default function ClientsPage() {
 
       {showModal && (
         <Modal title={form.id ? "Editar cliente" : "Nuevo cliente"} onClose={() => setShowModal(false)}>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <form onSubmit={handleSubmit} onKeyDown={preventEnterSubmit} className="flex flex-col gap-3">
             <Field label="Nombre completo *">
               <input
                 required
@@ -236,6 +236,12 @@ export default function ClientsPage() {
       )}
     </div>
   );
+}
+
+function preventEnterSubmit(e: React.KeyboardEvent<HTMLFormElement>) {
+  if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
+    e.preventDefault();
+  }
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
