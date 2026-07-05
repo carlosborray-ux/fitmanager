@@ -47,7 +47,8 @@ create table if not exists fitmanager_payments (
   created_at timestamptz not null default now(),
   group_id uuid not null default gen_random_uuid(),
   installment_number integer not null default 1,
-  installment_count integer not null default 1
+  installment_count integer not null default 1,
+  paid boolean not null default true
 );
 
 -- Asistencias / check-ins

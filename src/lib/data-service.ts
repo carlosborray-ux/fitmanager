@@ -195,6 +195,7 @@ export async function createPaymentInstallments(input: {
   installments: { amount: number; payment_date: string }[];
 }): Promise<Payment[]> {
   const groupId = usingDemoData ? demoDb.newId() : crypto.randomUUID();
+  const today = todayISO();
   const rows = input.installments.map((installment, i) => ({
     client_id: input.client_id,
     plan_id: input.plan_id,
@@ -207,6 +208,7 @@ export async function createPaymentInstallments(input: {
     group_id: groupId,
     installment_number: i + 1,
     installment_count: input.installments.length,
+    paid: installment.payment_date <= today,
   }));
 
   if (usingDemoData) {
@@ -226,6 +228,28 @@ export async function createPaymentInstallments(input: {
     .select("*, client:fitmanager_clients(*)");
   if (error) throw error;
   return data as Payment[];
+}
+
+export async function updatePayment(
+  id: string,
+  updates: { amount?: number; payment_date?: string; paid?: boolean }
+): Promise<Payment> {
+  if (usingDemoData) {
+    const db = demoDb.get();
+    const payment = db.payments.find((p) => p.id === id);
+    if (!payment) throw new Error("Pago no encontrado");
+    Object.assign(payment, updates);
+    demoDb.set(db);
+    return attachClient(payment, db.clients, db.plans);
+  }
+  const { data, error } = await supabase!
+    .from(TABLES.payments)
+    .update(updates)
+    .eq("id", id)
+    .select("*, client:fitmanager_clients(*)")
+    .single();
+  if (error) throw error;
+  return data as Payment;
 }
 
 export async function deletePayment(id: string): Promise<void> {
@@ -676,8 +700,8 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
   const today = todayISO();
   const monthKey = today.slice(0, 7);
 
-  const paymentsThisMonth = payments.filter((p) =>
-    p.payment_date.startsWith(monthKey)
+  const paymentsThisMonth = payments.filter(
+    (p) => p.payment_date.startsWith(monthKey) && p.paid
   );
   const revenueThisMonth = paymentsThisMonth.reduce((sum, p) => sum + p.amount, 0);
 

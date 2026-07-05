@@ -73,12 +73,14 @@ export default function DashboardPage() {
   }, [monthOffset]);
   const selectedMonthKey = `${selectedMonthDate.getFullYear()}-${String(selectedMonthDate.getMonth() + 1).padStart(2, "0")}`;
   const selectedMonthLabel = `${MONTH_NAMES[selectedMonthDate.getMonth()]} ${selectedMonthDate.getFullYear()}`;
-  const selectedMonthPayments = payments.filter((p) => p.payment_date.startsWith(selectedMonthKey));
+  const selectedMonthPayments = payments.filter(
+    (p) => p.payment_date.startsWith(selectedMonthKey) && p.paid
+  );
   const selectedMonthRevenue = selectedMonthPayments.reduce((sum, p) => sum + p.amount, 0);
 
   const pendingInstallments = useMemo(() => {
     return payments
-      .filter((p) => p.installment_count > 1)
+      .filter((p) => !p.paid)
       .map((p) => ({ ...p, remaining: daysUntil(p.payment_date) }))
       .sort((a, b) => a.remaining - b.remaining);
   }, [payments]);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CreditCard, Trash2, Wallet } from "lucide-react";
+import { CreditCard, Pencil, Trash2, Wallet } from "lucide-react";
 import Modal from "@/components/Modal";
 import Avatar from "@/components/Avatar";
 import EmptyState from "@/components/EmptyState";
@@ -12,6 +12,7 @@ import {
   listClients,
   listPayments,
   listPlans,
+  updatePayment,
 } from "@/lib/data-service";
 import { addDaysISO, formatCurrency, formatDate, todayISO } from "@/lib/format";
 import { Client, Payment, PaymentMethod, Plan } from "@/lib/types";
@@ -48,6 +49,11 @@ export default function PaymentsPage() {
   const [installmentCount, setInstallmentCount] = useState(1);
   const [installmentAmounts, setInstallmentAmounts] = useState<string[]>(["0"]);
   const [installmentDates, setInstallmentDates] = useState<string[]>([todayISO()]);
+
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+  const [editAmount, setEditAmount] = useState("0");
+  const [editDate, setEditDate] = useState(todayISO());
+  const [editPaid, setEditPaid] = useState(true);
 
   async function refresh() {
     const [p, c, pl] = await Promise.all([listPayments(), listClients(), listPlans()]);
@@ -135,6 +141,25 @@ export default function PaymentsPage() {
     await refresh();
   }
 
+  function openEdit(payment: Payment) {
+    setEditingPayment(payment);
+    setEditAmount(String(payment.amount));
+    setEditDate(payment.payment_date);
+    setEditPaid(payment.paid);
+  }
+
+  async function handleEditSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingPayment) return;
+    await updatePayment(editingPayment.id, {
+      amount: Number(editAmount) || 0,
+      payment_date: editDate,
+      paid: editPaid,
+    });
+    setEditingPayment(null);
+    await refresh();
+  }
+
   const canRegister = clients.length > 0 && plans.length > 0;
 
   const groups = useMemo(() => {
@@ -201,17 +226,35 @@ export default function PaymentsPage() {
                   {group.map((payment) => (
                     <li key={payment.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
                       <div>
-                        <p className="text-sm text-zinc-300">
-                          {payment.installment_count > 1
-                            ? `Cuota ${payment.installment_number} de ${payment.installment_count}`
-                            : "Pago unico"}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm text-zinc-300">
+                            {payment.installment_count > 1
+                              ? `Cuota ${payment.installment_number} de ${payment.installment_count}`
+                              : "Pago unico"}
+                          </p>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                              payment.paid
+                                ? "bg-emerald-500/15 text-emerald-400"
+                                : "bg-amber-500/15 text-amber-400"
+                            }`}
+                          >
+                            {payment.paid ? "Pagada" : "Pendiente"}
+                          </span>
+                        </div>
                         <p className="text-xs text-zinc-400">
                           {formatDate(payment.payment_date)} · {methodLabels[payment.method]}
                         </p>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
                         <p className="text-sm font-medium text-zinc-50">{formatCurrency(payment.amount)}</p>
+                        <button
+                          onClick={() => openEdit(payment)}
+                          className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-50"
+                          aria-label="Editar cuota"
+                        >
+                          <Pencil size={14} />
+                        </button>
                         <button
                           onClick={() => handleDelete(payment.id)}
                           className="rounded-lg p-1.5 text-red-400 hover:bg-red-500/10"
@@ -340,6 +383,51 @@ export default function PaymentsPage() {
             </Field>
             <button type="submit" className="btn-primary mt-2 justify-center">
               Guardar pago
+            </button>
+          </form>
+        </Modal>
+      )}
+
+      {editingPayment && (
+        <Modal
+          title={
+            editingPayment.installment_count > 1
+              ? `Editar cuota ${editingPayment.installment_number} de ${editingPayment.installment_count}`
+              : "Editar pago"
+          }
+          onClose={() => setEditingPayment(null)}
+        >
+          <form onSubmit={handleEditSubmit} onKeyDown={preventEnterSubmit} className="flex flex-col gap-3">
+            <Field label="Monto *">
+              <input
+                required
+                type="number"
+                min={0}
+                value={editAmount}
+                onChange={(e) => setEditAmount(e.target.value)}
+                className="input"
+              />
+            </Field>
+            <Field label="Fecha acordada *">
+              <input
+                required
+                type="date"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+                className="input"
+              />
+            </Field>
+            <label className="flex items-center gap-2 text-sm text-zinc-300">
+              <input
+                type="checkbox"
+                checked={editPaid}
+                onChange={(e) => setEditPaid(e.target.checked)}
+                className="h-4 w-4 rounded border-zinc-700 bg-zinc-950"
+              />
+              El cliente ya pago esta cuota
+            </label>
+            <button type="submit" className="btn-primary mt-2 justify-center">
+              Guardar cambios
             </button>
           </form>
         </Modal>

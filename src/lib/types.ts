@@ -39,6 +39,7 @@ export interface Payment {
   group_id: string;
   installment_number: number;
   installment_count: number;
+  paid: boolean;
   client?: Client | null;
 }
 

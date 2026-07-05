@@ -116,6 +116,7 @@ function seed(): DemoDb {
       group_id: uid(),
       installment_number: 1,
       installment_count: 1,
+      paid: true,
     },
     {
       id: uid(),
@@ -131,6 +132,7 @@ function seed(): DemoDb {
       group_id: uid(),
       installment_number: 1,
       installment_count: 1,
+      paid: true,
     },
     {
       id: uid(),
@@ -146,6 +148,7 @@ function seed(): DemoDb {
       group_id: uid(),
       installment_number: 1,
       installment_count: 1,
+      paid: true,
     },
   ];
 
@@ -237,6 +240,9 @@ function load(): DemoDb {
       if (s.series_id === undefined) s.series_id = null;
     });
     if (!parsed.trainingLogs) parsed.trainingLogs = [];
+    parsed.payments.forEach((p) => {
+      if (p.paid === undefined) p.paid = p.payment_date <= todayISO();
+    });
     return parsed;
   } catch {
     const fresh = seed();
