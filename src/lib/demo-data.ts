@@ -1,4 +1,4 @@
-import { AttendanceRecord, Client, Payment, Plan } from "./types";
+import { AttendanceRecord, Client, Payment, Plan, TrainingLog } from "./types";
 import { addDaysISO, todayISO } from "./format";
 
 const STORAGE_KEY = "gym-trainer-demo-db";
@@ -19,6 +19,7 @@ interface DemoDb {
   payments: Payment[];
   attendance: AttendanceRecord[];
   classSessions: ClassSessionRaw[];
+  trainingLogs: TrainingLog[];
 }
 
 function uid(): string {
@@ -188,7 +189,28 @@ function seed(): DemoDb {
     },
   ];
 
-  return { plans: [planBasico, planPremium], clients, payments, attendance, classSessions };
+  const trainingLogs: TrainingLog[] = [
+    {
+      id: uid(),
+      client_id: clients[0].id,
+      date: addDaysISO(today, -7),
+      exercise: "Sentadilla",
+      detail: "50kg x 8 reps x 3 series",
+      notes: null,
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: uid(),
+      client_id: clients[0].id,
+      date: today,
+      exercise: "Sentadilla",
+      detail: "60kg x 8 reps x 3 series",
+      notes: "Buena tecnica, subir progresivamente",
+      created_at: new Date().toISOString(),
+    },
+  ];
+
+  return { plans: [planBasico, planPremium], clients, payments, attendance, classSessions, trainingLogs };
 }
 
 function load(): DemoDb {
@@ -204,6 +226,7 @@ function load(): DemoDb {
   try {
     const parsed = JSON.parse(raw) as DemoDb;
     if (!parsed.classSessions) parsed.classSessions = [];
+    if (!parsed.trainingLogs) parsed.trainingLogs = [];
     return parsed;
   } catch {
     const fresh = seed();

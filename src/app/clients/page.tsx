@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Pencil, Search, Trash2, UserPlus, Users } from "lucide-react";
 import Modal from "@/components/Modal";
 import StatusBadge from "@/components/StatusBadge";
@@ -126,7 +127,7 @@ export default function ClientsPage() {
           <ul className="divide-y divide-zinc-800">
             {filtered.map((client) => (
               <li key={client.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3">
+                <Link href={`/clients/${client.id}`} className="flex items-center gap-3 hover:opacity-80">
                   <Avatar name={client.full_name} />
                   <div>
                     <div className="flex items-center gap-2">
@@ -142,7 +143,7 @@ export default function ClientsPage() {
                       </p>
                     )}
                   </div>
-                </div>
+                </Link>
                 <div className="flex gap-2 pl-[52px] sm:pl-0">
                   <button onClick={() => openEdit(client)} className="btn-secondary">
                     <Pencil size={13} /> Editar

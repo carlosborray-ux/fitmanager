@@ -9,6 +9,7 @@ import {
   Payment,
   PaymentMethod,
   Plan,
+  TrainingLog,
 } from "./types";
 import { todayISO } from "./format";
 
@@ -23,6 +24,7 @@ const TABLES = {
   attendance: "fitmanager_attendance",
   classSessions: "fitmanager_class_sessions",
   sessionAttendees: "fitmanager_session_attendees",
+  trainingLogs: "fitmanager_training_logs",
 } as const;
 
 function sortByCreatedDesc<T extends { created_at: string }>(rows: T[]): T[] {
@@ -289,6 +291,58 @@ export async function deleteAttendance(id: string): Promise<void> {
     return;
   }
   const { error } = await supabase!.from(TABLES.attendance).delete().eq("id", id);
+  if (error) throw error;
+}
+
+// ---------- Training Logs (progreso por cliente) ----------
+
+export async function listTrainingLogs(clientId: string): Promise<TrainingLog[]> {
+  if (usingDemoData) {
+    const db = demoDb.get();
+    return db.trainingLogs
+      .filter((t) => t.client_id === clientId)
+      .sort((a, b) => (a.date < b.date ? 1 : -1));
+  }
+  const { data, error } = await supabase!
+    .from(TABLES.trainingLogs)
+    .select("*")
+    .eq("client_id", clientId)
+    .order("date", { ascending: false });
+  if (error) throw error;
+  return data as TrainingLog[];
+}
+
+export async function createTrainingLog(
+  log: Omit<TrainingLog, "id" | "created_at">
+): Promise<TrainingLog> {
+  if (usingDemoData) {
+    const db = demoDb.get();
+    const created: TrainingLog = {
+      ...log,
+      id: demoDb.newId(),
+      created_at: new Date().toISOString(),
+    };
+    db.trainingLogs.push(created);
+    demoDb.set(db);
+    return created;
+  }
+  const { data, error } = await supabase!
+    .from(TABLES.trainingLogs)
+    .insert(log)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as TrainingLog;
+}
+
+export async function deleteTrainingLog(id: string): Promise<void> {
+  if (usingDemoData) {
+    const db = demoDb.get();
+    db.trainingLogs = db.trainingLogs.filter((t) => t.id !== id);
+    demoDb.set(db);
+    return;
+  }
+  const { error } = await supabase!.from(TABLES.trainingLogs).delete().eq("id", id);
   if (error) throw error;
 }
 

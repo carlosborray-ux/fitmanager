@@ -50,6 +50,16 @@ export interface AttendanceRecord {
   client?: Client | null;
 }
 
+export interface TrainingLog {
+  id: string;
+  client_id: string;
+  date: string;
+  exercise: string;
+  detail: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
 export interface ClassSession {
   id: string;
   date: string;

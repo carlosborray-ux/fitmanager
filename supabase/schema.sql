@@ -78,6 +78,18 @@ create table if not exists fitmanager_session_attendees (
   primary key (session_id, client_id)
 );
 
+-- Registro de progreso de entrenamiento (cargas, repeticiones, avances por cliente)
+create table if not exists fitmanager_training_logs (
+  id uuid primary key default gen_random_uuid(),
+  trainer_id uuid not null default auth.uid(),
+  client_id uuid not null references fitmanager_clients(id) on delete cascade,
+  date date not null default current_date,
+  exercise text not null,
+  detail text,
+  notes text,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists idx_fitmanager_clients_trainer on fitmanager_clients(trainer_id);
 create index if not exists idx_fitmanager_payments_trainer on fitmanager_payments(trainer_id);
 create index if not exists idx_fitmanager_payments_client on fitmanager_payments(client_id);
@@ -89,6 +101,8 @@ create index if not exists idx_fitmanager_class_sessions_date on fitmanager_clas
 create index if not exists idx_fitmanager_session_attendees_trainer on fitmanager_session_attendees(trainer_id);
 create index if not exists idx_fitmanager_session_attendees_session on fitmanager_session_attendees(session_id);
 create index if not exists idx_fitmanager_session_attendees_client on fitmanager_session_attendees(client_id);
+create index if not exists idx_fitmanager_training_logs_trainer on fitmanager_training_logs(trainer_id);
+create index if not exists idx_fitmanager_training_logs_client on fitmanager_training_logs(client_id);
 
 -- =============================================================
 -- Row Level Security: cada entrenador solo ve sus propios datos
@@ -99,6 +113,7 @@ alter table fitmanager_payments enable row level security;
 alter table fitmanager_attendance enable row level security;
 alter table fitmanager_class_sessions enable row level security;
 alter table fitmanager_session_attendees enable row level security;
+alter table fitmanager_training_logs enable row level security;
 
 create policy "fitmanager_plans_owner_all" on fitmanager_plans
   for all using (trainer_id = auth.uid()) with check (trainer_id = auth.uid());
@@ -116,4 +131,7 @@ create policy "fitmanager_class_sessions_owner_all" on fitmanager_class_sessions
   for all using (trainer_id = auth.uid()) with check (trainer_id = auth.uid());
 
 create policy "fitmanager_session_attendees_owner_all" on fitmanager_session_attendees
+  for all using (trainer_id = auth.uid()) with check (trainer_id = auth.uid());
+
+create policy "fitmanager_training_logs_owner_all" on fitmanager_training_logs
   for all using (trainer_id = auth.uid()) with check (trainer_id = auth.uid());
