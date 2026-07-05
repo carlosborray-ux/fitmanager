@@ -8,15 +8,17 @@ import { MONTH_NAMES, WEEKDAYS, WEEKDAYS_FULL, addDays, toISODate } from "@/lib/
 import {
   createRecurringClassSessions,
   deleteClassSession,
+  deleteClassSessionSeries,
   listClassSessions,
   listClients,
   saveClassSession,
+  updateClassSessionSeries,
 } from "@/lib/data-service";
 import { todayISO } from "@/lib/format";
 import { Client, ClassSession } from "@/lib/types";
 
 const HOUR_START = 5;
-const HOUR_END = 21;
+const HOUR_END = 22;
 const HOUR_HEIGHT = 56;
 
 function pad(n: number): string {
@@ -95,6 +97,8 @@ export default function CalendarPage() {
   const [repeatEnabled, setRepeatEnabled] = useState(false);
   const [repeatDays, setRepeatDays] = useState<Set<number>>(new Set());
   const [repeatUntil, setRepeatUntil] = useState("");
+  const [applyScope, setApplyScope] = useState<"one" | "future">("one");
+  const [saving, setSaving] = useState(false);
 
   async function refresh() {
     const [s, c] = await Promise.all([listClassSessions(), listClients()]);
@@ -160,6 +164,7 @@ export default function CalendarPage() {
     setRepeatEnabled(false);
     setRepeatDays(new Set());
     setRepeatUntil("");
+    setApplyScope("one");
     setFormOpen(true);
   }
 
@@ -176,6 +181,7 @@ export default function CalendarPage() {
     setRepeatEnabled(false);
     setRepeatDays(new Set());
     setRepeatUntil("");
+    setApplyScope("one");
     setFormOpen(true);
   }
 
@@ -209,29 +215,59 @@ export default function CalendarPage() {
     const finalGuestNames =
       pendingGuest && !guestNames.includes(pendingGuest) ? [...guestNames, pendingGuest] : guestNames;
     if (selectedClientIds.length === 0 && finalGuestNames.length === 0) return;
-    const payload = {
-      id: editingSession?.id,
-      date: formDate,
-      start_time: startTime,
-      end_time: endTime,
-      title: title || null,
-      client_ids: selectedClientIds,
-      guest_names: finalGuestNames,
-    };
-    if (!editingSession && repeatEnabled && repeatDays.size > 0 && repeatUntil) {
-      const dates = generateRecurringDates(formDate, repeatUntil, repeatDays);
-      await createRecurringClassSessions(payload, dates);
-    } else {
-      await saveClassSession(payload);
+
+    setSaving(true);
+    try {
+      if (!editingSession && repeatEnabled && repeatDays.size > 0 && repeatUntil) {
+        const dates = generateRecurringDates(formDate, repeatUntil, repeatDays);
+        await createRecurringClassSessions(
+          {
+            start_time: startTime,
+            end_time: endTime,
+            title: title || null,
+            client_ids: selectedClientIds,
+            guest_names: finalGuestNames,
+          },
+          dates
+        );
+      } else if (editingSession?.series_id && applyScope === "future") {
+        await updateClassSessionSeries(editingSession.series_id, editingSession.date, {
+          start_time: startTime,
+          end_time: endTime,
+          title: title || null,
+          client_ids: selectedClientIds,
+          guest_names: finalGuestNames,
+        });
+      } else {
+        await saveClassSession({
+          id: editingSession?.id,
+          date: formDate,
+          start_time: startTime,
+          end_time: endTime,
+          title: title || null,
+          client_ids: selectedClientIds,
+          guest_names: finalGuestNames,
+        });
+      }
+      setFormOpen(false);
+      await refresh();
+    } finally {
+      setSaving(false);
     }
-    setFormOpen(false);
-    await refresh();
   }
 
-  async function handleDelete() {
+  async function handleDelete(scope: "one" | "future") {
     if (!editingSession) return;
-    if (!confirm("¿Eliminar esta clase agendada?")) return;
-    await deleteClassSession(editingSession.id);
+    const message =
+      scope === "future"
+        ? "¿Eliminar esta clase y todas las futuras de esta serie?"
+        : "¿Eliminar esta clase agendada?";
+    if (!confirm(message)) return;
+    if (scope === "future" && editingSession.series_id) {
+      await deleteClassSessionSeries(editingSession.series_id, editingSession.date);
+    } else {
+      await deleteClassSession(editingSession.id);
+    }
     setFormOpen(false);
     await refresh();
   }
@@ -279,7 +315,7 @@ export default function CalendarPage() {
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          <div className="relative grid" style={{ gridTemplateColumns: "56px 1fr" }}>
+          <div className="relative grid pt-2" style={{ gridTemplateColumns: "56px 1fr" }}>
             <div className="relative">
               {hours.map((h) => (
                 <div
@@ -497,22 +533,67 @@ export default function CalendarPage() {
               </div>
             )}
 
+            {editingSession?.series_id && (
+              <div className="flex flex-col gap-1 text-sm">
+                <span className="font-medium text-zinc-300">Aplicar cambios a</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setApplyScope("one")}
+                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                      applyScope === "one"
+                        ? "border-violet-600 bg-violet-600 text-white"
+                        : "border-zinc-700 text-zinc-300 hover:bg-zinc-950"
+                    }`}
+                  >
+                    Solo esta clase
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setApplyScope("future")}
+                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                      applyScope === "future"
+                        ? "border-violet-600 bg-violet-600 text-white"
+                        : "border-zinc-700 text-zinc-300 hover:bg-zinc-950"
+                    }`}
+                  >
+                    Esta y las futuras
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="mt-2 flex items-center gap-2">
               <button
                 type="submit"
                 disabled={
-                  selectedClientIds.length === 0 && guestNames.length === 0 && guestInput.trim() === ""
+                  saving ||
+                  (selectedClientIds.length === 0 && guestNames.length === 0 && guestInput.trim() === "")
                 }
                 className="btn-primary flex-1 justify-center"
               >
-                Guardar clase
+                {saving ? "Guardando..." : "Guardar clase"}
               </button>
-              {editingSession && (
-                <button type="button" onClick={handleDelete} className="btn-danger">
+              {editingSession && !editingSession.series_id && (
+                <button type="button" onClick={() => handleDelete("one")} className="btn-danger">
                   <Trash2 size={14} /> Eliminar
                 </button>
               )}
             </div>
+            {editingSession?.series_id && (
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => handleDelete("one")} className="btn-danger flex-1 justify-center">
+                  <Trash2 size={14} /> Eliminar solo esta
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete("future")}
+                  className="btn-danger flex-1 justify-center"
+                >
+                  <Trash2 size={14} /> Eliminar esta y futuras
+                </button>
+              </div>
+            )}
           </form>
         </Modal>
       )}

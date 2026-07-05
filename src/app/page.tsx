@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Users,
   CalendarCheck,
   CalendarClock,
+  ChevronLeft,
+  ChevronRight,
   Wallet,
   PartyPopper,
   CheckCircle2,
@@ -18,27 +20,42 @@ import StatusBadge from "@/components/StatusBadge";
 import Avatar from "@/components/Avatar";
 import EmptyState from "@/components/EmptyState";
 import { CardGridSkeleton } from "@/components/Skeleton";
-import { getDashboardSummary, listClassSessions } from "@/lib/data-service";
-import { ClassSession, DashboardSummary } from "@/lib/types";
+import { MONTH_NAMES } from "@/lib/calendar-utils";
+import { getDashboardSummary, listClassSessions, listPayments } from "@/lib/data-service";
+import { ClassSession, DashboardSummary, Payment } from "@/lib/types";
 import { formatCurrency, todayISO } from "@/lib/format";
 
 export default function DashboardPage() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [todaySessions, setTodaySessions] = useState<ClassSession[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [monthOffset, setMonthOffset] = useState(0);
 
   useEffect(() => {
-    Promise.all([getDashboardSummary(), listClassSessions()])
-      .then(([s, sessions]) => {
+    Promise.all([getDashboardSummary(), listClassSessions(), listPayments()])
+      .then(([s, sessions, p]) => {
         setSummary(s);
         setTodaySessions(
           sessions
             .filter((session) => session.date === todayISO())
             .sort((a, b) => (a.start_time < b.start_time ? -1 : 1))
         );
+        setPayments(p);
       })
       .finally(() => setLoading(false));
   }, []);
+
+  const selectedMonthDate = useMemo(() => {
+    const d = new Date(`${todayISO()}T00:00:00`);
+    d.setDate(1);
+    d.setMonth(d.getMonth() + monthOffset);
+    return d;
+  }, [monthOffset]);
+  const selectedMonthKey = `${selectedMonthDate.getFullYear()}-${String(selectedMonthDate.getMonth() + 1).padStart(2, "0")}`;
+  const selectedMonthLabel = `${MONTH_NAMES[selectedMonthDate.getMonth()]} ${selectedMonthDate.getFullYear()}`;
+  const selectedMonthPayments = payments.filter((p) => p.payment_date.startsWith(selectedMonthKey));
+  const selectedMonthRevenue = selectedMonthPayments.reduce((sum, p) => sum + p.amount, 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -63,6 +80,37 @@ export default function DashboardPage() {
               icon={Wallet}
               accent="amber"
             />
+          </div>
+
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-zinc-50">Ingresos por mes</h2>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setMonthOffset((o) => o - 1)}
+                  className="rounded-lg border border-zinc-800 p-1.5 hover:bg-zinc-950"
+                  aria-label="Mes anterior"
+                >
+                  <ChevronLeft size={14} />
+                </button>
+                <span className="w-28 text-center text-sm font-medium capitalize text-zinc-300">
+                  {selectedMonthLabel}
+                </span>
+                <button
+                  onClick={() => setMonthOffset((o) => Math.min(o + 1, 0))}
+                  disabled={monthOffset >= 0}
+                  className="rounded-lg border border-zinc-800 p-1.5 hover:bg-zinc-950 disabled:opacity-30"
+                  aria-label="Mes siguiente"
+                >
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </div>
+            <p className="mt-2 text-2xl font-bold text-amber-400">{formatCurrency(selectedMonthRevenue)}</p>
+            <p className="text-xs text-zinc-400">
+              {selectedMonthPayments.length} pago{selectedMonthPayments.length === 1 ? "" : "s"} registrado
+              {selectedMonthPayments.length === 1 ? "" : "s"} este mes
+            </p>
           </div>
 
           <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm">

@@ -360,6 +360,7 @@ function resolveSession(session: ClassSessionRaw, clients: Client[]): ClassSessi
       .map((id) => clients.find((c) => c.id === id))
       .filter((c): c is Client => Boolean(c)),
     guests: session.guest_names ?? [],
+    series_id: session.series_id ?? null,
   };
 }
 
@@ -374,8 +375,11 @@ function mapSessionRow(row: Record<string, unknown>): ClassSession {
     created_at: row.created_at as string,
     clients: attendees.filter((a) => a.client).map((a) => a.client as Client),
     guests: attendees.filter((a) => a.guest_name).map((a) => a.guest_name as string),
+    series_id: (row.series_id as string | null) ?? null,
   };
 }
+
+const SESSION_SELECT = `*, attendees:${TABLES.sessionAttendees}(client:${TABLES.clients}(*), guest_name)`;
 
 export async function listClassSessions(): Promise<ClassSession[]> {
   if (usingDemoData) {
@@ -386,11 +390,11 @@ export async function listClassSessions(): Promise<ClassSession[]> {
   }
   const { data, error } = await supabase!
     .from(TABLES.classSessions)
-    .select(`*, attendees:${TABLES.sessionAttendees}(client:${TABLES.clients}(*), guest_name)`)
+    .select(SESSION_SELECT)
     .order("date", { ascending: true })
     .order("start_time", { ascending: true });
   if (error) throw error;
-  return (data as Array<Record<string, unknown>>).map(mapSessionRow);
+  return (data as unknown as Array<Record<string, unknown>>).map(mapSessionRow);
 }
 
 export interface ClassSessionInput {
@@ -429,6 +433,7 @@ export async function saveClassSession(session: ClassSessionInput): Promise<Clas
         title: session.title,
         client_ids: session.client_ids,
         guest_names: session.guest_names,
+        series_id: null,
         created_at: new Date().toISOString(),
       });
     }
@@ -482,20 +487,129 @@ export async function saveClassSession(session: ClassSessionInput): Promise<Clas
 
   const { data, error } = await supabase!
     .from(TABLES.classSessions)
-    .select(`*, attendees:${TABLES.sessionAttendees}(client:${TABLES.clients}(*), guest_name)`)
+    .select(SESSION_SELECT)
     .eq("id", sessionId)
     .single();
   if (error) throw error;
-  return mapSessionRow(data as Record<string, unknown>);
+  return mapSessionRow(data as unknown as Record<string, unknown>);
 }
 
 export async function createRecurringClassSessions(
-  session: Omit<ClassSessionInput, "id">,
+  session: Omit<ClassSessionInput, "id" | "date">,
   dates: string[]
-): Promise<void> {
-  for (const date of dates) {
-    await saveClassSession({ ...session, date });
+): Promise<ClassSession[]> {
+  if (dates.length === 0) return [];
+  const seriesId = usingDemoData ? demoDb.newId() : crypto.randomUUID();
+
+  if (usingDemoData) {
+    const db = demoDb.get();
+    const created: ClassSessionRaw[] = dates.map((date) => ({
+      id: demoDb.newId(),
+      date,
+      start_time: session.start_time,
+      end_time: session.end_time,
+      title: session.title,
+      client_ids: session.client_ids,
+      guest_names: session.guest_names,
+      series_id: seriesId,
+      created_at: new Date().toISOString(),
+    }));
+    db.classSessions.push(...created);
+    demoDb.set(db);
+    return created.map((s) => resolveSession(s, db.clients));
   }
+
+  const { data: sessionRows, error: sessionsError } = await supabase!
+    .from(TABLES.classSessions)
+    .insert(
+      dates.map((date) => ({
+        date,
+        start_time: session.start_time,
+        end_time: session.end_time,
+        title: session.title,
+        series_id: seriesId,
+      }))
+    )
+    .select();
+  if (sessionsError) throw sessionsError;
+  const sessionIds = (sessionRows as { id: string }[]).map((s) => s.id);
+
+  const attendeeRows = sessionIds.flatMap((sessionId) => [
+    ...session.client_ids.map((clientId) => ({ session_id: sessionId, client_id: clientId })),
+    ...session.guest_names.map((guestName) => ({ session_id: sessionId, guest_name: guestName })),
+  ]);
+  if (attendeeRows.length > 0) {
+    const { error: insertError } = await supabase!.from(TABLES.sessionAttendees).insert(attendeeRows);
+    if (insertError) throw insertError;
+  }
+
+  const { data, error } = await supabase!.from(TABLES.classSessions).select(SESSION_SELECT).in("id", sessionIds);
+  if (error) throw error;
+  return (data as unknown as Array<Record<string, unknown>>).map(mapSessionRow);
+}
+
+export async function updateClassSessionSeries(
+  seriesId: string,
+  fromDate: string,
+  updates: {
+    start_time: string;
+    end_time: string;
+    title: string | null;
+    client_ids: string[];
+    guest_names: string[];
+  }
+): Promise<void> {
+  if (usingDemoData) {
+    const db = demoDb.get();
+    db.classSessions = db.classSessions.map((s) =>
+      s.series_id === seriesId && s.date >= fromDate
+        ? {
+            ...s,
+            start_time: updates.start_time,
+            end_time: updates.end_time,
+            title: updates.title,
+            client_ids: updates.client_ids,
+            guest_names: updates.guest_names,
+          }
+        : s
+    );
+    demoDb.set(db);
+    return;
+  }
+  const { data, error } = await supabase!
+    .from(TABLES.classSessions)
+    .update({ start_time: updates.start_time, end_time: updates.end_time, title: updates.title })
+    .eq("series_id", seriesId)
+    .gte("date", fromDate)
+    .select("id");
+  if (error) throw error;
+  const ids = (data as { id: string }[]).map((d) => d.id);
+  if (ids.length === 0) return;
+  const { error: delErr } = await supabase!.from(TABLES.sessionAttendees).delete().in("session_id", ids);
+  if (delErr) throw delErr;
+  const rows = ids.flatMap((sessionId) => [
+    ...updates.client_ids.map((clientId) => ({ session_id: sessionId, client_id: clientId })),
+    ...updates.guest_names.map((guestName) => ({ session_id: sessionId, guest_name: guestName })),
+  ]);
+  if (rows.length > 0) {
+    const { error: insErr } = await supabase!.from(TABLES.sessionAttendees).insert(rows);
+    if (insErr) throw insErr;
+  }
+}
+
+export async function deleteClassSessionSeries(seriesId: string, fromDate: string): Promise<void> {
+  if (usingDemoData) {
+    const db = demoDb.get();
+    db.classSessions = db.classSessions.filter((s) => !(s.series_id === seriesId && s.date >= fromDate));
+    demoDb.set(db);
+    return;
+  }
+  const { error } = await supabase!
+    .from(TABLES.classSessions)
+    .delete()
+    .eq("series_id", seriesId)
+    .gte("date", fromDate);
+  if (error) throw error;
 }
 
 export async function deleteClassSession(id: string): Promise<void> {

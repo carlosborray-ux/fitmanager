@@ -69,6 +69,7 @@ export interface ClassSession {
   created_at: string;
   clients: Client[];
   guests: string[];
+  series_id: string | null;
 }
 
 export interface DashboardSummary {

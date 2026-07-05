@@ -67,7 +67,8 @@ create table if not exists fitmanager_class_sessions (
   start_time time not null,
   end_time time not null,
   title text,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  series_id uuid
 );
 
 -- Relacion clase <-> asistentes (clientes reales o invitados de cortesia por nombre)

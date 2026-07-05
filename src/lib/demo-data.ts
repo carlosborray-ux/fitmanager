@@ -12,6 +12,7 @@ export interface ClassSessionRaw {
   created_at: string;
   client_ids: string[];
   guest_names: string[];
+  series_id: string | null;
 }
 
 interface DemoDb {
@@ -179,6 +180,7 @@ function seed(): DemoDb {
       created_at: new Date().toISOString(),
       client_ids: [clients[0].id, clients[1].id],
       guest_names: [],
+      series_id: null,
     },
     {
       id: uid(),
@@ -189,6 +191,7 @@ function seed(): DemoDb {
       created_at: new Date().toISOString(),
       client_ids: [clients[2].id],
       guest_names: [],
+      series_id: null,
     },
   ];
 
@@ -231,6 +234,7 @@ function load(): DemoDb {
     if (!parsed.classSessions) parsed.classSessions = [];
     parsed.classSessions.forEach((s) => {
       if (!s.guest_names) s.guest_names = [];
+      if (s.series_id === undefined) s.series_id = null;
     });
     if (!parsed.trainingLogs) parsed.trainingLogs = [];
     return parsed;
