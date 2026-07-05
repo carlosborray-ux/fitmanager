@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   Users,
   CalendarCheck,
+  CalendarClock,
   Wallet,
   PartyPopper,
   CheckCircle2,
@@ -17,17 +18,25 @@ import StatusBadge from "@/components/StatusBadge";
 import Avatar from "@/components/Avatar";
 import EmptyState from "@/components/EmptyState";
 import { CardGridSkeleton } from "@/components/Skeleton";
-import { getDashboardSummary } from "@/lib/data-service";
-import { DashboardSummary } from "@/lib/types";
-import { formatCurrency } from "@/lib/format";
+import { getDashboardSummary, listClassSessions } from "@/lib/data-service";
+import { ClassSession, DashboardSummary } from "@/lib/types";
+import { formatCurrency, todayISO } from "@/lib/format";
 
 export default function DashboardPage() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [todaySessions, setTodaySessions] = useState<ClassSession[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getDashboardSummary()
-      .then(setSummary)
+    Promise.all([getDashboardSummary(), listClassSessions()])
+      .then(([s, sessions]) => {
+        setSummary(s);
+        setTodaySessions(
+          sessions
+            .filter((session) => session.date === todayISO())
+            .sort((a, b) => (a.start_time < b.start_time ? -1 : 1))
+        );
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -54,6 +63,40 @@ export default function DashboardPage() {
               icon={Wallet}
               accent="amber"
             />
+          </div>
+
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-semibold text-zinc-50">Clases de hoy ({todaySessions.length})</h2>
+              <Link href="/calendar" className="text-sm font-medium text-violet-400 hover:underline">
+                Ver calendario
+              </Link>
+            </div>
+            {todaySessions.length === 0 ? (
+              <EmptyState icon={CalendarClock} title="No tienes clases agendadas hoy" />
+            ) : (
+              <ul className="divide-y divide-zinc-800">
+                {todaySessions.map((session) => {
+                  const attendeeNames = [
+                    ...session.clients.map((c) => c.full_name),
+                    ...session.guests.map((g) => `${g} (cortesia)`),
+                  ];
+                  return (
+                    <li key={session.id} className="flex items-center justify-between gap-3 py-2.5">
+                      <div>
+                        <p className="text-sm font-medium text-zinc-50">
+                          {session.start_time} - {session.end_time}
+                          {session.title ? ` · ${session.title}` : ""}
+                        </p>
+                        {attendeeNames.length > 0 && (
+                          <p className="text-xs text-zinc-400">{attendeeNames.join(", ")}</p>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
 
           <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm">

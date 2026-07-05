@@ -68,6 +68,7 @@ export interface ClassSession {
   title: string | null;
   created_at: string;
   clients: Client[];
+  guests: string[];
 }
 
 export interface DashboardSummary {

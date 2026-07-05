@@ -11,6 +11,7 @@ export interface ClassSessionRaw {
   title: string | null;
   created_at: string;
   client_ids: string[];
+  guest_names: string[];
 }
 
 interface DemoDb {
@@ -177,6 +178,7 @@ function seed(): DemoDb {
       title: "Clase grupal de fuerza",
       created_at: new Date().toISOString(),
       client_ids: [clients[0].id, clients[1].id],
+      guest_names: [],
     },
     {
       id: uid(),
@@ -186,6 +188,7 @@ function seed(): DemoDb {
       title: null,
       created_at: new Date().toISOString(),
       client_ids: [clients[2].id],
+      guest_names: [],
     },
   ];
 
@@ -226,6 +229,9 @@ function load(): DemoDb {
   try {
     const parsed = JSON.parse(raw) as DemoDb;
     if (!parsed.classSessions) parsed.classSessions = [];
+    parsed.classSessions.forEach((s) => {
+      if (!s.guest_names) s.guest_names = [];
+    });
     if (!parsed.trainingLogs) parsed.trainingLogs = [];
     return parsed;
   } catch {

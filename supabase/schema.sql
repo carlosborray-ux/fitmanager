@@ -70,12 +70,13 @@ create table if not exists fitmanager_class_sessions (
   created_at timestamptz not null default now()
 );
 
--- Relacion clase <-> clientes que asisten (permite 2 o mas clientes por clase)
+-- Relacion clase <-> asistentes (clientes reales o invitados de cortesia por nombre)
 create table if not exists fitmanager_session_attendees (
+  id uuid primary key default gen_random_uuid(),
   session_id uuid not null references fitmanager_class_sessions(id) on delete cascade,
-  client_id uuid not null references fitmanager_clients(id) on delete cascade,
-  trainer_id uuid not null default auth.uid(),
-  primary key (session_id, client_id)
+  client_id uuid references fitmanager_clients(id) on delete cascade,
+  guest_name text,
+  trainer_id uuid not null default auth.uid()
 );
 
 -- Registro de progreso de entrenamiento (cargas, repeticiones, avances por cliente)

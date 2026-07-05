@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Trash2, X } from "lucide-react";
 import Modal from "@/components/Modal";
 import Avatar from "@/components/Avatar";
-import { MONTH_NAMES, WEEKDAYS_FULL, addDays, toISODate } from "@/lib/calendar-utils";
+import { MONTH_NAMES, WEEKDAYS, WEEKDAYS_FULL, addDays, toISODate } from "@/lib/calendar-utils";
 import {
+  createRecurringClassSessions,
   deleteClassSession,
   listClassSessions,
   listClients,
@@ -37,6 +38,18 @@ function formatDayLabel(iso: string): string {
   const d = new Date(`${iso}T00:00:00`);
   const weekday = WEEKDAYS_FULL[(d.getDay() + 6) % 7];
   return `${weekday}, ${d.getDate()} de ${MONTH_NAMES[d.getMonth()].toLowerCase()} de ${d.getFullYear()}`;
+}
+
+function generateRecurringDates(startDate: string, untilDate: string, weekdays: Set<number>): string[] {
+  const dates: string[] = [];
+  let d = new Date(`${startDate}T00:00:00`);
+  const end = new Date(`${untilDate}T00:00:00`);
+  while (d <= end) {
+    const wd = (d.getDay() + 6) % 7;
+    if (weekdays.has(wd)) dates.push(toISODate(d));
+    d = addDays(d, 1);
+  }
+  return dates;
 }
 
 interface LaidOutSession extends ClassSession {
@@ -77,6 +90,11 @@ export default function CalendarPage() {
   const [title, setTitle] = useState("");
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
   const [clientSearch, setClientSearch] = useState("");
+  const [guestNames, setGuestNames] = useState<string[]>([]);
+  const [guestInput, setGuestInput] = useState("");
+  const [repeatEnabled, setRepeatEnabled] = useState(false);
+  const [repeatDays, setRepeatDays] = useState<Set<number>>(new Set());
+  const [repeatUntil, setRepeatUntil] = useState("");
 
   async function refresh() {
     const [s, c] = await Promise.all([listClassSessions(), listClients()]);
@@ -137,6 +155,11 @@ export default function CalendarPage() {
     setTitle("");
     setSelectedClientIds([]);
     setClientSearch("");
+    setGuestNames([]);
+    setGuestInput("");
+    setRepeatEnabled(false);
+    setRepeatDays(new Set());
+    setRepeatUntil("");
     setFormOpen(true);
   }
 
@@ -148,6 +171,11 @@ export default function CalendarPage() {
     setTitle(session.title ?? "");
     setSelectedClientIds(session.clients.map((c) => c.id));
     setClientSearch("");
+    setGuestNames(session.guests);
+    setGuestInput("");
+    setRepeatEnabled(false);
+    setRepeatDays(new Set());
+    setRepeatUntil("");
     setFormOpen(true);
   }
 
@@ -155,17 +183,44 @@ export default function CalendarPage() {
     setSelectedClientIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
   }
 
+  function addGuest() {
+    const name = guestInput.trim();
+    if (!name) return;
+    setGuestNames((names) => [...names, name]);
+    setGuestInput("");
+  }
+
+  function removeGuest(index: number) {
+    setGuestNames((names) => names.filter((_, i) => i !== index));
+  }
+
+  function toggleRepeatDay(day: number) {
+    setRepeatDays((days) => {
+      const next = new Set(days);
+      if (next.has(day)) next.delete(day);
+      else next.add(day);
+      return next;
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (selectedClientIds.length === 0) return;
-    await saveClassSession({
+    if (selectedClientIds.length === 0 && guestNames.length === 0) return;
+    const payload = {
       id: editingSession?.id,
       date: formDate,
       start_time: startTime,
       end_time: endTime,
       title: title || null,
       client_ids: selectedClientIds,
-    });
+      guest_names: guestNames,
+    };
+    if (!editingSession && repeatEnabled && repeatDays.size > 0 && repeatUntil) {
+      const dates = generateRecurringDates(formDate, repeatUntil, repeatDays);
+      await createRecurringClassSessions(payload, dates);
+    } else {
+      await saveClassSession(payload);
+    }
     setFormOpen(false);
     await refresh();
   }
@@ -258,6 +313,10 @@ export default function CalendarPage() {
                 const top = ((startMin - HOUR_START * 60) / 60) * HOUR_HEIGHT;
                 const height = Math.max(((endMin - startMin) / 60) * HOUR_HEIGHT, 26);
                 const widthPct = 100 / session.colCount;
+                const attendeeNames = [
+                  ...session.clients.map((c) => c.full_name),
+                  ...session.guests.map((g) => `${g} (cortesia)`),
+                ];
                 return (
                   <button
                     key={session.id}
@@ -274,15 +333,13 @@ export default function CalendarPage() {
                     className="absolute z-[1] overflow-hidden rounded-md border border-violet-500/40 bg-violet-500/15 p-1.5 text-left shadow-sm hover:bg-violet-500/20"
                   >
                     <p className="truncate text-xs font-semibold text-violet-200">
-                      {session.title || `${session.clients.length} cliente(s)`}
+                      {session.title || `${attendeeNames.length} cliente(s)`}
                     </p>
                     <p className="truncate text-[11px] text-violet-300">
                       {session.start_time} - {session.end_time}
                     </p>
-                    {session.clients.length > 0 && (
-                      <p className="truncate text-[10px] text-violet-400">
-                        {session.clients.map((c) => c.full_name).join(", ")}
-                      </p>
+                    {attendeeNames.length > 0 && (
+                      <p className="truncate text-[10px] text-violet-400">{attendeeNames.join(", ")}</p>
                     )}
                   </button>
                 );
@@ -334,7 +391,7 @@ export default function CalendarPage() {
             </Field>
             <div className="flex flex-col gap-1 text-sm">
               <span className="font-medium text-zinc-300">
-                Clientes * ({selectedClientIds.length} seleccionados)
+                Clientes ({selectedClientIds.length} seleccionados)
               </span>
               <input
                 value={clientSearch}
@@ -364,10 +421,83 @@ export default function CalendarPage() {
                 )}
               </div>
             </div>
+
+            <div className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-zinc-300">Cortesias / invitados sin cliente</span>
+              <div className="flex gap-2">
+                <input
+                  value={guestInput}
+                  onChange={(e) => setGuestInput(e.target.value)}
+                  placeholder="Nombre del invitado"
+                  className="input"
+                />
+                <button type="button" onClick={addGuest} className="btn-secondary shrink-0">
+                  Agregar
+                </button>
+              </div>
+              {guestNames.length > 0 && (
+                <div className="mt-1 flex flex-wrap gap-2">
+                  {guestNames.map((name, i) => (
+                    <span
+                      key={i}
+                      className="flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2.5 py-1 text-xs text-amber-300"
+                    >
+                      {name}
+                      <button type="button" onClick={() => removeGuest(i)} aria-label="Quitar invitado">
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {!editingSession && (
+              <div className="flex flex-col gap-2 rounded-lg border border-zinc-800 p-3">
+                <label className="flex items-center gap-2 text-sm font-medium text-zinc-300">
+                  <input
+                    type="checkbox"
+                    checked={repeatEnabled}
+                    onChange={(e) => setRepeatEnabled(e.target.checked)}
+                    className="h-4 w-4 rounded border-zinc-700 text-violet-400 focus:ring-violet-500"
+                  />
+                  Repetir semanalmente
+                </label>
+                {repeatEnabled && (
+                  <>
+                    <div className="flex gap-1.5">
+                      {WEEKDAYS.map((label, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => toggleRepeatDay(i)}
+                          className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
+                            repeatDays.has(i) ? "bg-violet-600 text-white" : "bg-zinc-800 text-zinc-400"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <Field label="Repetir hasta">
+                      <input
+                        type="date"
+                        required={repeatEnabled}
+                        min={formDate}
+                        value={repeatUntil}
+                        onChange={(e) => setRepeatUntil(e.target.value)}
+                        className="input"
+                      />
+                    </Field>
+                  </>
+                )}
+              </div>
+            )}
+
             <div className="mt-2 flex items-center gap-2">
               <button
                 type="submit"
-                disabled={selectedClientIds.length === 0}
+                disabled={selectedClientIds.length === 0 && guestNames.length === 0}
                 className="btn-primary flex-1 justify-center"
               >
                 Guardar clase

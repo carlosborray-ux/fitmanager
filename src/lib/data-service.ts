@@ -359,6 +359,21 @@ function resolveSession(session: ClassSessionRaw, clients: Client[]): ClassSessi
     clients: session.client_ids
       .map((id) => clients.find((c) => c.id === id))
       .filter((c): c is Client => Boolean(c)),
+    guests: session.guest_names ?? [],
+  };
+}
+
+function mapSessionRow(row: Record<string, unknown>): ClassSession {
+  const attendees = row.attendees as Array<{ client: Client | null; guest_name: string | null }>;
+  return {
+    id: row.id as string,
+    date: row.date as string,
+    start_time: (row.start_time as string).slice(0, 5),
+    end_time: (row.end_time as string).slice(0, 5),
+    title: row.title as string | null,
+    created_at: row.created_at as string,
+    clients: attendees.filter((a) => a.client).map((a) => a.client as Client),
+    guests: attendees.filter((a) => a.guest_name).map((a) => a.guest_name as string),
   };
 }
 
@@ -371,29 +386,24 @@ export async function listClassSessions(): Promise<ClassSession[]> {
   }
   const { data, error } = await supabase!
     .from(TABLES.classSessions)
-    .select(`*, attendees:${TABLES.sessionAttendees}(client:${TABLES.clients}(*))`)
+    .select(`*, attendees:${TABLES.sessionAttendees}(client:${TABLES.clients}(*), guest_name)`)
     .order("date", { ascending: true })
     .order("start_time", { ascending: true });
   if (error) throw error;
-  return (data as Array<Record<string, unknown>>).map((row) => ({
-    id: row.id as string,
-    date: row.date as string,
-    start_time: (row.start_time as string).slice(0, 5),
-    end_time: (row.end_time as string).slice(0, 5),
-    title: row.title as string | null,
-    created_at: row.created_at as string,
-    clients: (row.attendees as Array<{ client: Client }>).map((a) => a.client),
-  }));
+  return (data as Array<Record<string, unknown>>).map(mapSessionRow);
 }
 
-export async function saveClassSession(session: {
+export interface ClassSessionInput {
   id?: string;
   date: string;
   start_time: string;
   end_time: string;
   title: string | null;
   client_ids: string[];
-}): Promise<ClassSession> {
+  guest_names: string[];
+}
+
+export async function saveClassSession(session: ClassSessionInput): Promise<ClassSession> {
   if (usingDemoData) {
     const db = demoDb.get();
     if (session.id) {
@@ -406,6 +416,7 @@ export async function saveClassSession(session: {
               end_time: session.end_time,
               title: session.title,
               client_ids: session.client_ids,
+              guest_names: session.guest_names,
             }
           : s
       );
@@ -417,6 +428,7 @@ export async function saveClassSession(session: {
         end_time: session.end_time,
         title: session.title,
         client_ids: session.client_ids,
+        guest_names: session.guest_names,
         created_at: new Date().toISOString(),
       });
     }
@@ -459,29 +471,31 @@ export async function saveClassSession(session: {
     sessionId = (data as { id: string }).id;
   }
 
-  if (session.client_ids.length > 0) {
-    const { error: insertError } = await supabase!
-      .from(TABLES.sessionAttendees)
-      .insert(session.client_ids.map((clientId) => ({ session_id: sessionId, client_id: clientId })));
+  const attendeeRows = [
+    ...session.client_ids.map((clientId) => ({ session_id: sessionId, client_id: clientId })),
+    ...session.guest_names.map((guestName) => ({ session_id: sessionId, guest_name: guestName })),
+  ];
+  if (attendeeRows.length > 0) {
+    const { error: insertError } = await supabase!.from(TABLES.sessionAttendees).insert(attendeeRows);
     if (insertError) throw insertError;
   }
 
   const { data, error } = await supabase!
     .from(TABLES.classSessions)
-    .select(`*, attendees:${TABLES.sessionAttendees}(client:${TABLES.clients}(*))`)
+    .select(`*, attendees:${TABLES.sessionAttendees}(client:${TABLES.clients}(*), guest_name)`)
     .eq("id", sessionId)
     .single();
   if (error) throw error;
-  const row = data as Record<string, unknown>;
-  return {
-    id: row.id as string,
-    date: row.date as string,
-    start_time: (row.start_time as string).slice(0, 5),
-    end_time: (row.end_time as string).slice(0, 5),
-    title: row.title as string | null,
-    created_at: row.created_at as string,
-    clients: (row.attendees as Array<{ client: Client }>).map((a) => a.client),
-  };
+  return mapSessionRow(data as Record<string, unknown>);
+}
+
+export async function createRecurringClassSessions(
+  session: Omit<ClassSessionInput, "id">,
+  dates: string[]
+): Promise<void> {
+  for (const date of dates) {
+    await saveClassSession({ ...session, date });
+  }
 }
 
 export async function deleteClassSession(id: string): Promise<void> {
