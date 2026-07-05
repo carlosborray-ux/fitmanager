@@ -36,3 +36,9 @@ export function addDaysISO(dateISO: string, days: number): string {
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 }
+
+export function daysUntil(dateISO: string): number {
+  const today = new Date(`${todayISO()}T00:00:00`);
+  const target = new Date(`${dateISO}T00:00:00`);
+  return Math.round((target.getTime() - today.getTime()) / 86400000);
+}

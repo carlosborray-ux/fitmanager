@@ -23,7 +23,26 @@ import { CardGridSkeleton } from "@/components/Skeleton";
 import { MONTH_NAMES } from "@/lib/calendar-utils";
 import { getDashboardSummary, listClassSessions } from "@/lib/data-service";
 import { ClassSession, DashboardSummary } from "@/lib/types";
-import { formatCurrency, todayISO } from "@/lib/format";
+import { daysUntil, formatCurrency, formatDate, todayISO } from "@/lib/format";
+
+const MAX_VISIBLE_INSTALLMENTS = 8;
+
+function installmentAlarm(remaining: number, dueDateISO: string) {
+  if (remaining < 0) {
+    const days = Math.abs(remaining);
+    return { label: `Vencida hace ${days} dia${days === 1 ? "" : "s"}`, tone: "bg-red-500/15 text-red-400" };
+  }
+  if (remaining === 0) {
+    return { label: "Vence hoy", tone: "bg-red-500/15 text-red-400" };
+  }
+  if (remaining <= 3) {
+    return { label: `Vence en ${remaining} dia${remaining === 1 ? "" : "s"}`, tone: "bg-amber-500/15 text-amber-400" };
+  }
+  if (remaining <= 7) {
+    return { label: `Vence en ${remaining} dias`, tone: "bg-zinc-800 text-zinc-300" };
+  }
+  return { label: `Vence el ${formatDate(dueDateISO)}`, tone: "bg-zinc-800 text-zinc-300" };
+}
 
 export default function DashboardPage() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
@@ -56,6 +75,13 @@ export default function DashboardPage() {
   const selectedMonthLabel = `${MONTH_NAMES[selectedMonthDate.getMonth()]} ${selectedMonthDate.getFullYear()}`;
   const selectedMonthPayments = payments.filter((p) => p.payment_date.startsWith(selectedMonthKey));
   const selectedMonthRevenue = selectedMonthPayments.reduce((sum, p) => sum + p.amount, 0);
+
+  const pendingInstallments = useMemo(() => {
+    return payments
+      .filter((p) => p.installment_count > 1)
+      .map((p) => ({ ...p, remaining: daysUntil(p.payment_date) }))
+      .sort((a, b) => a.remaining - b.remaining);
+  }, [payments]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -111,6 +137,56 @@ export default function DashboardPage() {
               {selectedMonthPayments.length} pago{selectedMonthPayments.length === 1 ? "" : "s"} registrado
               {selectedMonthPayments.length === 1 ? "" : "s"} este mes
             </p>
+          </div>
+
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-semibold text-zinc-50">Cuotas pendientes ({pendingInstallments.length})</h2>
+              <Link href="/payments" className="text-sm font-medium text-violet-400 hover:underline">
+                Ver pagos
+              </Link>
+            </div>
+            {pendingInstallments.length === 0 ? (
+              <EmptyState
+                icon={PartyPopper}
+                title="No hay cuotas pendientes"
+                description="Ninguna compra tiene cuotas por vencer."
+              />
+            ) : (
+              <>
+                <ul className="divide-y divide-zinc-800">
+                  {pendingInstallments.slice(0, MAX_VISIBLE_INSTALLMENTS).map((p) => {
+                    const { label, tone } = installmentAlarm(p.remaining, p.payment_date);
+                    return (
+                      <li key={p.id} className="flex items-center justify-between gap-3 py-2.5">
+                        <div className="flex items-center gap-3">
+                          <Avatar name={p.client?.full_name ?? "?"} size={36} />
+                          <div>
+                            <p className="text-sm font-medium text-zinc-50">
+                              {p.client?.full_name ?? "Cliente eliminado"}
+                            </p>
+                            <p className="text-xs text-zinc-400">
+                              Cuota {p.installment_number} de {p.installment_count} · {formatCurrency(p.amount)}
+                            </p>
+                          </div>
+                        </div>
+                        <span
+                          className={`flex shrink-0 items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${tone}`}
+                        >
+                          <AlertTriangle size={12} /> {label}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+                {pendingInstallments.length > MAX_VISIBLE_INSTALLMENTS && (
+                  <p className="pt-2 text-xs text-zinc-400">
+                    +{pendingInstallments.length - MAX_VISIBLE_INSTALLMENTS} cuota
+                    {pendingInstallments.length - MAX_VISIBLE_INSTALLMENTS === 1 ? "" : "s"} mas en Pagos
+                  </p>
+                )}
+              </>
+            )}
           </div>
 
           <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm">
