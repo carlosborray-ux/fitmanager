@@ -27,27 +27,27 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4">
-      <div className="w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
+      <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-sm">
         <div className="mb-6 flex flex-col items-center gap-2 text-center">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-200">
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-950/50">
             <Dumbbell size={22} strokeWidth={2.5} />
           </span>
           <div>
-            <p className="text-lg font-bold text-zinc-900">FitManager</p>
-            <p className="text-xs text-zinc-500">By Gabriel</p>
+            <p className="text-lg font-bold text-zinc-50">FitManager</p>
+            <p className="text-xs text-zinc-400">By Gabriel</p>
           </div>
         </div>
 
         {!isSupabaseConfigured ? (
-          <p className="rounded-lg bg-amber-50 p-3 text-center text-sm text-amber-800">
+          <p className="rounded-lg bg-amber-500/10 p-3 text-center text-sm text-amber-300">
             Estas en modo demo (sin Supabase conectado), no necesitas iniciar sesion.
             Vuelve al <a href="/" className="font-medium underline">resumen</a>.
           </p>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium text-zinc-700">Correo</span>
+              <span className="font-medium text-zinc-300">Correo</span>
               <input
                 type="email"
                 required
@@ -58,7 +58,7 @@ export default function LoginPage() {
               />
             </label>
             <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium text-zinc-700">Contraseña</span>
+              <span className="font-medium text-zinc-300">Contraseña</span>
               <input
                 type="password"
                 required
@@ -67,7 +67,7 @@ export default function LoginPage() {
                 className="input"
               />
             </label>
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm text-red-400">{error}</p>}
             <button type="submit" disabled={loading} className="btn-primary mt-2 justify-center">
               <LogIn size={16} /> {loading ? "Ingresando..." : "Ingresar"}
             </button>

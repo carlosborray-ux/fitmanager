@@ -79,8 +79,8 @@ export default function PlansPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900">Planes</h1>
-          <p className="text-sm text-zinc-500">
+          <h1 className="text-2xl font-bold text-zinc-50">Planes</h1>
+          <p className="text-sm text-zinc-400">
             {plans.length} de {MAX_PLANS} planes usados
           </p>
         </div>
@@ -90,7 +90,7 @@ export default function PlansPage() {
       </div>
 
       {atLimit && (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
           Alcanzaste el limite de {MAX_PLANS} planes. Elimina uno que ya no uses para crear otro.
         </p>
       )}
@@ -104,30 +104,30 @@ export default function PlansPage() {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+              className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm transition-shadow hover:shadow-md"
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="font-semibold text-zinc-900">{plan.name}</p>
-                  <p className="text-sm font-medium text-emerald-700">{formatCurrency(plan.price)}</p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="font-semibold text-zinc-50">{plan.name}</p>
+                  <p className="text-sm font-medium text-emerald-400">{formatCurrency(plan.price)}</p>
+                  <p className="text-xs text-zinc-400">
                     Cada {plan.duration_days} dias · {plan.sessions_per_period} sesiones incluidas
                   </p>
                   {plan.description && (
-                    <p className="mt-1 text-xs text-zinc-500">{plan.description}</p>
+                    <p className="mt-1 text-xs text-zinc-400">{plan.description}</p>
                   )}
                 </div>
                 <div className="flex gap-1">
                   <button
                     onClick={() => openEdit(plan)}
-                    className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100"
+                    className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-800"
                     aria-label="Editar plan"
                   >
                     <Pencil size={14} />
                   </button>
                   <button
                     onClick={() => setDeleteTarget(plan)}
-                    className="rounded-lg p-1.5 text-red-500 hover:bg-red-50"
+                    className="rounded-lg p-1.5 text-red-400 hover:bg-red-500/10"
                     aria-label="Eliminar plan"
                   >
                     <Trash2 size={14} />
@@ -216,7 +216,7 @@ function preventEnterSubmit(e: React.KeyboardEvent<HTMLFormElement>) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="font-medium text-zinc-700">{label}</span>
+      <span className="font-medium text-zinc-300">{label}</span>
       {children}
     </label>
   );

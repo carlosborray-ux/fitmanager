@@ -28,15 +28,15 @@ export default function Modal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-h-[90vh] overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl transition-all duration-200 sm:max-w-lg sm:rounded-2xl ${
+        className={`w-full max-h-[90vh] overflow-y-auto rounded-t-2xl bg-zinc-900 p-5 shadow-xl transition-all duration-200 sm:max-w-lg sm:rounded-2xl ${
           visible ? "translate-y-0 opacity-100 sm:scale-100" : "translate-y-4 opacity-0 sm:scale-95"
         }`}
       >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-zinc-900">{title}</h2>
+          <h2 className="text-lg font-semibold text-zinc-50">{title}</h2>
           <button
             onClick={onClose}
-            className="rounded-full p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+            className="rounded-full p-1 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-50"
             aria-label="Cerrar"
           >
             <X size={18} />

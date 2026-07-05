@@ -1,9 +1,9 @@
 import { ClientStatus } from "@/lib/types";
 
 const styles: Record<ClientStatus, { pill: string; dot: string }> = {
-  active: { pill: "bg-emerald-50 text-emerald-700", dot: "bg-emerald-500" },
-  paused: { pill: "bg-amber-50 text-amber-700", dot: "bg-amber-500" },
-  inactive: { pill: "bg-zinc-100 text-zinc-500", dot: "bg-zinc-400" },
+  active: { pill: "bg-emerald-500/10 text-emerald-400", dot: "bg-emerald-500" },
+  paused: { pill: "bg-amber-500/10 text-amber-400", dot: "bg-amber-500" },
+  inactive: { pill: "bg-zinc-800 text-zinc-400", dot: "bg-zinc-700" },
 };
 
 const labels: Record<ClientStatus, string> = {

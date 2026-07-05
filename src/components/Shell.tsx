@@ -64,7 +64,7 @@ export default function Shell({ children }: { children: ReactNode }) {
   }
 
   if (isSupabaseConfigured && !authChecked) {
-    return <div className="flex min-h-screen items-center justify-center bg-zinc-50 text-sm text-zinc-500">Cargando...</div>;
+    return <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-sm text-zinc-400">Cargando...</div>;
   }
 
   if (isSupabaseConfigured && !session) {
@@ -72,15 +72,15 @@ export default function Shell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-zinc-50 md:flex-row">
-      <aside className="hidden w-60 shrink-0 border-r border-zinc-200 bg-white md:flex md:flex-col">
+    <div className="flex min-h-screen w-full flex-col bg-zinc-950 md:flex-row">
+      <aside className="hidden w-60 shrink-0 border-r border-zinc-800 bg-zinc-900 md:flex md:flex-col">
         <div className="flex items-center gap-2.5 px-5 py-6">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-200">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-950/50">
             <Dumbbell size={18} strokeWidth={2.5} />
           </span>
           <div>
-            <p className="text-base font-bold leading-tight text-zinc-900">FitManager</p>
-            <p className="text-xs text-zinc-500">By Gabriel</p>
+            <p className="text-base font-bold leading-tight text-zinc-50">FitManager</p>
+            <p className="text-xs text-zinc-400">By Gabriel</p>
           </div>
         </div>
         <nav className="flex flex-1 flex-col gap-1 px-3">
@@ -92,8 +92,8 @@ export default function Shell({ children }: { children: ReactNode }) {
                 href={href}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   active
-                    ? "bg-violet-600 text-white shadow-sm shadow-violet-200"
-                    : "text-zinc-600 hover:bg-zinc-100"
+                    ? "bg-violet-600 text-white shadow-sm shadow-violet-950/50"
+                    : "text-zinc-400 hover:bg-zinc-800"
                 }`}
               >
                 <Icon size={17} strokeWidth={2.25} />
@@ -103,17 +103,17 @@ export default function Shell({ children }: { children: ReactNode }) {
           })}
         </nav>
         {usingDemoData ? (
-          <div className="m-3 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
+          <div className="m-3 rounded-lg bg-amber-500/10 p-3 text-xs text-amber-300">
             Modo demo: datos guardados solo en este navegador. Conecta Supabase
             para usar datos reales.
           </div>
         ) : (
           session && (
-            <div className="m-3 flex items-center justify-between gap-2 rounded-lg bg-zinc-50 p-3">
-              <p className="truncate text-xs text-zinc-500">{session.user.email}</p>
+            <div className="m-3 flex items-center justify-between gap-2 rounded-lg bg-zinc-950 p-3">
+              <p className="truncate text-xs text-zinc-400">{session.user.email}</p>
               <button
                 onClick={handleLogout}
-                className="flex shrink-0 items-center gap-1 text-xs font-medium text-zinc-600 hover:text-zinc-900"
+                className="flex shrink-0 items-center gap-1 text-xs font-medium text-zinc-400 hover:text-zinc-50"
               >
                 <LogOut size={13} /> Salir
               </button>
@@ -122,23 +122,23 @@ export default function Shell({ children }: { children: ReactNode }) {
         )}
       </aside>
 
-      <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-4 py-3 md:hidden">
+      <header className="flex items-center justify-between border-b border-zinc-800 bg-zinc-900 px-4 py-3 md:hidden">
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-600 text-white">
             <Dumbbell size={16} strokeWidth={2.5} />
           </span>
           <div>
-            <p className="text-base font-bold leading-tight text-zinc-900">FitManager</p>
-            <p className="text-[10px] leading-tight text-zinc-500">By Gabriel</p>
+            <p className="text-base font-bold leading-tight text-zinc-50">FitManager</p>
+            <p className="text-[10px] leading-tight text-zinc-400">By Gabriel</p>
           </div>
         </div>
         {usingDemoData ? (
-          <span className="rounded-full bg-amber-100 px-2 py-1 text-[10px] font-semibold text-amber-800">
+          <span className="rounded-full bg-amber-500/15 px-2 py-1 text-[10px] font-semibold text-amber-300">
             DEMO
           </span>
         ) : (
           session && (
-            <button onClick={handleLogout} className="flex items-center gap-1 text-xs font-medium text-zinc-600">
+            <button onClick={handleLogout} className="flex items-center gap-1 text-xs font-medium text-zinc-400">
               <LogOut size={13} /> Salir
             </button>
           )
@@ -149,7 +149,7 @@ export default function Shell({ children }: { children: ReactNode }) {
         <div className="mx-auto w-full max-w-5xl p-4 sm:p-6">{children}</div>
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-zinc-200 bg-white/95 backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-zinc-800 bg-zinc-900/95 backdrop-blur md:hidden">
         {NAV_ITEMS.map(({ href, label, Icon }) => {
           const active = pathname === href;
           return (
@@ -157,7 +157,7 @@ export default function Shell({ children }: { children: ReactNode }) {
               key={href}
               href={href}
               className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium ${
-                active ? "text-violet-600" : "text-zinc-400"
+                active ? "text-violet-400" : "text-zinc-600"
               }`}
             >
               <Icon size={19} strokeWidth={active ? 2.5 : 2} />

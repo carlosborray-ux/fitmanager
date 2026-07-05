@@ -95,8 +95,8 @@ export default function ClientsPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900">Clientes</h1>
-          <p className="text-sm text-zinc-500">{clients.length} clientes registrados</p>
+          <h1 className="text-2xl font-bold text-zinc-50">Clientes</h1>
+          <p className="text-sm text-zinc-400">{clients.length} clientes registrados</p>
         </div>
         <button onClick={openNew} className="btn-primary">
           <UserPlus size={16} /> Nuevo cliente
@@ -104,7 +104,7 @@ export default function ClientsPage() {
       </div>
 
       <div className="relative">
-        <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+        <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -122,22 +122,22 @@ export default function ClientsPage() {
           description="Prueba con otro nombre o agrega un nuevo cliente."
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
-          <ul className="divide-y divide-zinc-100">
+        <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 shadow-sm">
+          <ul className="divide-y divide-zinc-800">
             {filtered.map((client) => (
               <li key={client.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                   <Avatar name={client.full_name} />
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-medium text-zinc-900">{client.full_name}</p>
+                      <p className="font-medium text-zinc-50">{client.full_name}</p>
                       <StatusBadge status={client.status} />
                     </div>
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-zinc-400">
                       {client.plan?.name ?? "Sin plan"} · Desde {formatDate(client.start_date)}
                     </p>
                     {(client.phone || client.email) && (
-                      <p className="text-xs text-zinc-400">
+                      <p className="text-xs text-zinc-600">
                         {[client.phone, client.email].filter(Boolean).join(" · ")}
                       </p>
                     )}
@@ -247,7 +247,7 @@ function preventEnterSubmit(e: React.KeyboardEvent<HTMLFormElement>) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="font-medium text-zinc-700">{label}</span>
+      <span className="font-medium text-zinc-300">{label}</span>
       {children}
     </label>
   );

@@ -153,8 +153,8 @@ export default function PaymentsPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900">Pagos</h1>
-          <p className="text-sm text-zinc-500">{groups.length} compras registradas</p>
+          <h1 className="text-2xl font-bold text-zinc-50">Pagos</h1>
+          <p className="text-sm text-zinc-400">{groups.length} compras registradas</p>
         </div>
         <button
           onClick={openNew}
@@ -177,44 +177,44 @@ export default function PaymentsPage() {
             const total = group.reduce((sum, p) => sum + p.amount, 0);
             const plan = plansById.get(first.plan_id ?? "");
             return (
-              <div key={first.group_id} className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
-                <div className="flex items-center justify-between gap-3 border-b border-zinc-100 p-4">
+              <div key={first.group_id} className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 shadow-sm">
+                <div className="flex items-center justify-between gap-3 border-b border-zinc-800 p-4">
                   <div className="flex items-center gap-3">
                     <Avatar name={first.client?.full_name ?? "?"} />
                     <div>
-                      <p className="font-medium text-zinc-900">
+                      <p className="font-medium text-zinc-50">
                         {first.client?.full_name ?? "Cliente eliminado"}
                       </p>
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-zinc-400">
                         {plan?.name ?? "Sin plan"} · Cubre hasta {formatDate(first.period_end)}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-emerald-700">{formatCurrency(total)}</p>
-                    <span className="text-xs text-zinc-500">
+                    <p className="font-semibold text-emerald-400">{formatCurrency(total)}</p>
+                    <span className="text-xs text-zinc-400">
                       {first.installment_count === 1 ? "Pago completo" : `${first.installment_count} cuotas`}
                     </span>
                   </div>
                 </div>
-                <ul className="divide-y divide-zinc-100">
+                <ul className="divide-y divide-zinc-800">
                   {group.map((payment) => (
                     <li key={payment.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
                       <div>
-                        <p className="text-sm text-zinc-700">
+                        <p className="text-sm text-zinc-300">
                           {payment.installment_count > 1
                             ? `Cuota ${payment.installment_number} de ${payment.installment_count}`
                             : "Pago unico"}
                         </p>
-                        <p className="text-xs text-zinc-500">
+                        <p className="text-xs text-zinc-400">
                           {formatDate(payment.payment_date)} · {methodLabels[payment.method]}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <p className="text-sm font-medium text-zinc-900">{formatCurrency(payment.amount)}</p>
+                        <p className="text-sm font-medium text-zinc-50">{formatCurrency(payment.amount)}</p>
                         <button
                           onClick={() => handleDelete(payment.id)}
-                          className="rounded-lg p-1.5 text-red-500 hover:bg-red-50"
+                          className="rounded-lg p-1.5 text-red-400 hover:bg-red-500/10"
                           aria-label="Eliminar cuota"
                         >
                           <Trash2 size={14} />
@@ -262,7 +262,7 @@ export default function PaymentsPage() {
             </Field>
 
             <div className="flex flex-col gap-1 text-sm">
-              <span className="font-medium text-zinc-700">Cuotas</span>
+              <span className="font-medium text-zinc-300">Cuotas</span>
               <div className="grid grid-cols-3 gap-2">
                 {[1, 2, 3].map((count) => (
                   <button
@@ -272,7 +272,7 @@ export default function PaymentsPage() {
                     className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                       installmentCount === count
                         ? "border-violet-600 bg-violet-600 text-white"
-                        : "border-zinc-300 text-zinc-700 hover:bg-zinc-50"
+                        : "border-zinc-700 text-zinc-300 hover:bg-zinc-950"
                     }`}
                   >
                     {count === 1 ? "Completo" : `${count} cuotas`}
@@ -283,7 +283,7 @@ export default function PaymentsPage() {
 
             <div className="flex flex-col gap-2">
               {installmentAmounts.map((amount, i) => (
-                <div key={i} className="grid grid-cols-2 gap-3 rounded-lg border border-zinc-200 p-2.5">
+                <div key={i} className="grid grid-cols-2 gap-3 rounded-lg border border-zinc-800 p-2.5">
                   <Field label={installmentCount > 1 ? `Cuota ${i + 1}: monto` : "Monto *"}>
                     <input
                       required
@@ -357,7 +357,7 @@ function preventEnterSubmit(e: React.KeyboardEvent<HTMLFormElement>) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="font-medium text-zinc-700">{label}</span>
+      <span className="font-medium text-zinc-300">{label}</span>
       {children}
     </label>
   );

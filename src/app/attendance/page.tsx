@@ -87,8 +87,8 @@ export default function AttendancePage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold text-zinc-900">Asistencia</h1>
-        <p className="text-sm text-zinc-500">
+        <h1 className="text-2xl font-bold text-zinc-50">Asistencia</h1>
+        <p className="text-sm text-zinc-400">
           {attendanceOnSelectedDate.size} de {clients.length} clientes activos marcados{" "}
           {isToday ? "hoy" : `el ${formatDate(selectedDate)}`}
         </p>
@@ -107,13 +107,13 @@ export default function AttendancePage() {
             <RotateCcw size={13} /> Hoy
           </button>
         )}
-        <p className="w-full text-xs text-zinc-500 sm:w-auto sm:flex-1">
+        <p className="w-full text-xs text-zinc-400 sm:w-auto sm:flex-1">
           ¿Se te olvido marcar un dia? Elige la fecha y marca la asistencia atrasada, no tiene que ser hoy.
         </p>
       </div>
 
       <div className="relative">
-        <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+        <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -140,27 +140,27 @@ export default function AttendancePage() {
               <li
                 key={client.id}
                 onClick={() => setCalendarClient(client)}
-                className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 shadow-sm transition-colors hover:border-violet-300 ${
-                  marked ? "border-emerald-200 bg-emerald-50" : "border-zinc-200 bg-white"
+                className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 shadow-sm transition-colors hover:border-violet-500/40 ${
+                  marked ? "border-emerald-500/30 bg-emerald-500/10" : "border-zinc-800 bg-zinc-900"
                 }`}
               >
                 <Avatar name={client.full_name} size={38} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-zinc-900">{client.full_name}</p>
+                  <p className="truncate text-sm font-medium text-zinc-50">{client.full_name}</p>
                   {period && target ? (
                     <div className="mt-1 flex items-center gap-2">
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-zinc-100">
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-zinc-800">
                         <div
                           className={`h-full rounded-full ${pct >= 100 ? "bg-emerald-500" : "bg-violet-500"}`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <span className="shrink-0 text-[11px] font-medium text-zinc-500">
+                      <span className="shrink-0 text-[11px] font-medium text-zinc-400">
                         {used} de {target}
                       </span>
                     </div>
                   ) : (
-                    <p className="mt-0.5 text-[11px] text-amber-600">
+                    <p className="mt-0.5 text-[11px] text-amber-400">
                       Sin periodo de pago activo en esta fecha
                     </p>
                   )}
@@ -173,7 +173,7 @@ export default function AttendancePage() {
                   }}
                   className={`flex shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 ${
                     marked
-                      ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                      ? "bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/20"
                       : "bg-violet-600 text-white hover:bg-violet-700"
                   }`}
                 >

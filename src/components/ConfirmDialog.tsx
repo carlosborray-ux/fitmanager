@@ -19,9 +19,9 @@ export default function ConfirmDialog({
   return (
     <Modal title={title} onClose={onCancel}>
       <div className="flex flex-col gap-4">
-        <div className="flex items-start gap-3 rounded-lg bg-red-50 p-3">
-          <AlertTriangle size={18} className="mt-0.5 shrink-0 text-red-600" />
-          <p className="text-sm text-red-800">{description}</p>
+        <div className="flex items-start gap-3 rounded-lg bg-red-500/10 p-3">
+          <AlertTriangle size={18} className="mt-0.5 shrink-0 text-red-400" />
+          <p className="text-sm text-red-300">{description}</p>
         </div>
         <div className="flex justify-end gap-2">
           <button onClick={onCancel} className="btn-secondary">

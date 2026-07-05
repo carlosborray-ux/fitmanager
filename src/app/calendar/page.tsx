@@ -176,32 +176,32 @@ export default function CalendarPage() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900">Agenda</h1>
-          <p className="text-sm text-zinc-500">{rangeLabel}</p>
+          <h1 className="text-2xl font-bold text-zinc-50">Agenda</h1>
+          <p className="text-sm text-zinc-400">{rangeLabel}</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => openNewForm(today)} className="btn-primary">
             <Plus size={16} /> Agendar clase
           </button>
-          <button onClick={() => goToWeek(-1)} className="rounded-lg border border-zinc-200 bg-white p-2 hover:bg-zinc-50" aria-label="Semana anterior">
+          <button onClick={() => goToWeek(-1)} className="rounded-lg border border-zinc-800 bg-zinc-900 p-2 hover:bg-zinc-950" aria-label="Semana anterior">
             <ChevronLeft size={16} />
           </button>
-          <button onClick={goToToday} className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50">
+          <button onClick={goToToday} className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-950">
             Hoy
           </button>
-          <button onClick={() => goToWeek(1)} className="rounded-lg border border-zinc-200 bg-white p-2 hover:bg-zinc-50" aria-label="Semana siguiente">
+          <button onClick={() => goToWeek(1)} className="rounded-lg border border-zinc-800 bg-zinc-900 p-2 hover:bg-zinc-950" aria-label="Semana siguiente">
             <ChevronRight size={16} />
           </button>
         </div>
       </div>
 
       {loading ? (
-        <div className="h-96 animate-pulse rounded-xl bg-zinc-100" />
+        <div className="h-96 animate-pulse rounded-xl bg-zinc-800" />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white shadow-sm">
+        <div className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900 shadow-sm">
           <div style={{ minWidth: 780 }}>
             <div
-              className="sticky top-0 z-10 grid border-b border-zinc-200 bg-white"
+              className="sticky top-0 z-10 grid border-b border-zinc-800 bg-zinc-900"
               style={{ gridTemplateColumns: "56px repeat(7, minmax(100px, 1fr))" }}
             >
               <div />
@@ -210,18 +210,18 @@ export default function CalendarPage() {
                 const count = sessionsByDate.get(iso)?.length ?? 0;
                 const d = new Date(`${iso}T00:00:00`);
                 return (
-                  <div key={iso} className="border-l border-zinc-100 px-1 py-2 text-center">
-                    <p className="text-[10px] font-semibold tracking-wide text-zinc-400">
+                  <div key={iso} className="border-l border-zinc-800 px-1 py-2 text-center">
+                    <p className="text-[10px] font-semibold tracking-wide text-zinc-600">
                       {WEEKDAYS_SHORT[i]}
                     </p>
                     <p
                       className={`mx-auto flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${
-                        isToday ? "bg-violet-600 text-white" : "text-zinc-800"
+                        isToday ? "bg-violet-600 text-white" : "text-zinc-100"
                       }`}
                     >
                       {d.getDate()}
                     </p>
-                    <p className="text-[10px] text-zinc-400">{count > 0 ? `${count} clase${count > 1 ? "s" : ""}` : ""}</p>
+                    <p className="text-[10px] text-zinc-600">{count > 0 ? `${count} clase${count > 1 ? "s" : ""}` : ""}</p>
                   </div>
                 );
               })}
@@ -233,7 +233,7 @@ export default function CalendarPage() {
                   <div
                     key={h}
                     style={{ height: HOUR_HEIGHT }}
-                    className="border-t border-zinc-100 pr-1.5 text-right text-[10px] text-zinc-400"
+                    className="border-t border-zinc-800 pr-1.5 text-right text-[10px] text-zinc-600"
                   >
                     <span className="relative -top-1.5">{formatHourLabel(h)}</span>
                   </div>
@@ -243,18 +243,18 @@ export default function CalendarPage() {
               {weekDays.map((iso) => {
                 const laidOut = layoutDaySessions(sessionsByDate.get(iso) ?? []);
                 return (
-                  <div key={iso} className="relative border-l border-zinc-100">
+                  <div key={iso} className="relative border-l border-zinc-800">
                     {hours.map((h) => (
-                      <div key={h} style={{ height: HOUR_HEIGHT }} className="group relative border-t border-zinc-100">
+                      <div key={h} style={{ height: HOUR_HEIGHT }} className="group relative border-t border-zinc-800">
                         <button
                           onClick={() => openNewForm(iso, `${pad(h)}:00`, `${pad(h + 1)}:00`)}
-                          className="absolute inset-x-0 top-0 flex h-1/2 items-center justify-center text-[9px] text-violet-500 opacity-0 hover:bg-violet-50 group-hover:opacity-100"
+                          className="absolute inset-x-0 top-0 flex h-1/2 items-center justify-center text-[9px] text-violet-400 opacity-0 hover:bg-violet-500/10 group-hover:opacity-100"
                         >
                           clic para agregar
                         </button>
                         <button
                           onClick={() => openNewForm(iso, `${pad(h)}:30`, `${pad(h + 1)}:30`)}
-                          className="absolute inset-x-0 top-1/2 flex h-1/2 items-center justify-center text-[9px] text-violet-500 opacity-0 hover:bg-violet-50 group-hover:opacity-100"
+                          className="absolute inset-x-0 top-1/2 flex h-1/2 items-center justify-center text-[9px] text-violet-400 opacity-0 hover:bg-violet-500/10 group-hover:opacity-100"
                         >
                           clic para agregar
                         </button>
@@ -280,12 +280,12 @@ export default function CalendarPage() {
                             left: `${session.col * widthPct}%`,
                             width: `${widthPct}%`,
                           }}
-                          className="absolute z-[1] overflow-hidden rounded-md border border-violet-300 bg-violet-100 p-1 text-left shadow-sm hover:bg-violet-200"
+                          className="absolute z-[1] overflow-hidden rounded-md border border-violet-500/40 bg-violet-500/15 p-1 text-left shadow-sm hover:bg-violet-500/20"
                         >
-                          <p className="truncate text-[11px] font-semibold text-violet-900">
+                          <p className="truncate text-[11px] font-semibold text-violet-200">
                             {session.title || `${session.clients.length} cliente(s)`}
                           </p>
-                          <p className="truncate text-[10px] text-violet-700">
+                          <p className="truncate text-[10px] text-violet-300">
                             {session.start_time} - {session.end_time}
                           </p>
                         </button>
@@ -340,7 +340,7 @@ export default function CalendarPage() {
               />
             </Field>
             <div className="flex flex-col gap-1 text-sm">
-              <span className="font-medium text-zinc-700">
+              <span className="font-medium text-zinc-300">
                 Clientes * ({selectedClientIds.length} seleccionados)
               </span>
               <input
@@ -349,20 +349,20 @@ export default function CalendarPage() {
                 placeholder="Buscar cliente..."
                 className="input"
               />
-              <div className="mt-1 max-h-40 overflow-y-auto rounded-lg border border-zinc-200">
+              <div className="mt-1 max-h-40 overflow-y-auto rounded-lg border border-zinc-800">
                 {filteredClientsForForm.length === 0 ? (
-                  <p className="p-3 text-sm text-zinc-500">No hay clientes activos que coincidan.</p>
+                  <p className="p-3 text-sm text-zinc-400">No hay clientes activos que coincidan.</p>
                 ) : (
                   filteredClientsForForm.map((c) => (
                     <label
                       key={c.id}
-                      className="flex items-center gap-2 border-b border-zinc-100 p-2 text-sm last:border-b-0 hover:bg-zinc-50"
+                      className="flex items-center gap-2 border-b border-zinc-800 p-2 text-sm last:border-b-0 hover:bg-zinc-950"
                     >
                       <input
                         type="checkbox"
                         checked={selectedClientIds.includes(c.id)}
                         onChange={() => toggleClient(c.id)}
-                        className="h-4 w-4 rounded border-zinc-300 text-violet-600 focus:ring-violet-500"
+                        className="h-4 w-4 rounded border-zinc-700 text-violet-400 focus:ring-violet-500"
                       />
                       <Avatar name={c.full_name} size={24} />
                       {c.full_name}
@@ -401,7 +401,7 @@ function preventEnterSubmit(e: React.KeyboardEvent<HTMLFormElement>) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="font-medium text-zinc-700">{label}</span>
+      <span className="font-medium text-zinc-300">{label}</span>
       {children}
     </label>
   );

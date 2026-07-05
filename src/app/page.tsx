@@ -34,8 +34,8 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold text-zinc-900">Resumen</h1>
-        <p className="text-sm text-zinc-500">
+        <h1 className="text-2xl font-bold text-zinc-50">Resumen</h1>
+        <p className="text-sm text-zinc-400">
           Vista general de tus clientes, pagos y asistencia.
         </p>
       </div>
@@ -56,12 +56,12 @@ export default function DashboardPage() {
             />
           </div>
 
-          <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="font-semibold text-zinc-900">
+              <h2 className="font-semibold text-zinc-50">
                 Pagos vencidos o pendientes ({summary.overdueClients.length})
               </h2>
-              <Link href="/payments" className="text-sm font-medium text-violet-600 hover:underline">
+              <Link href="/payments" className="text-sm font-medium text-violet-400 hover:underline">
                 Registrar pago
               </Link>
             </div>
@@ -72,14 +72,14 @@ export default function DashboardPage() {
                 description="Ningun cliente activo tiene pagos vencidos."
               />
             ) : (
-              <ul className="divide-y divide-zinc-100">
+              <ul className="divide-y divide-zinc-800">
                 {summary.overdueClients.map((client) => (
                   <li key={client.id} className="flex items-center justify-between py-2.5">
                     <div className="flex items-center gap-3">
                       <Avatar name={client.full_name} size={36} />
                       <div>
-                        <p className="text-sm font-medium text-zinc-900">{client.full_name}</p>
-                        <p className="text-xs text-zinc-500">{client.plan?.name ?? "Sin plan"}</p>
+                        <p className="text-sm font-medium text-zinc-50">{client.full_name}</p>
+                        <p className="text-xs text-zinc-400">{client.plan?.name ?? "Sin plan"}</p>
                       </div>
                     </div>
                     <StatusBadge status={client.status} />
@@ -90,19 +90,19 @@ export default function DashboardPage() {
           </div>
 
           {(summary.clientsWithOneSessionLeft.length > 0 || summary.clientsWithTwoSessionsLeft.length > 0) && (
-            <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
-              <h2 className="mb-3 font-semibold text-zinc-900">Por renovar pronto</h2>
-              <ul className="divide-y divide-zinc-100">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm">
+              <h2 className="mb-3 font-semibold text-zinc-50">Por renovar pronto</h2>
+              <ul className="divide-y divide-zinc-800">
                 {summary.clientsWithOneSessionLeft.map((client) => (
                   <li key={client.id} className="flex items-center justify-between py-2.5">
                     <div className="flex items-center gap-3">
                       <Avatar name={client.full_name} size={36} />
                       <div>
-                        <p className="text-sm font-medium text-zinc-900">{client.full_name}</p>
-                        <p className="text-xs text-zinc-500">{client.plan?.name ?? "Sin plan"}</p>
+                        <p className="text-sm font-medium text-zinc-50">{client.full_name}</p>
+                        <p className="text-xs text-zinc-400">{client.plan?.name ?? "Sin plan"}</p>
                       </div>
                     </div>
-                    <span className="flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">
+                    <span className="flex items-center gap-1 rounded-full bg-red-500/15 px-2.5 py-0.5 text-xs font-medium text-red-400">
                       <AlertTriangle size={12} /> Le queda 1 sesion
                     </span>
                   </li>
@@ -112,11 +112,11 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-3">
                       <Avatar name={client.full_name} size={36} />
                       <div>
-                        <p className="text-sm font-medium text-zinc-900">{client.full_name}</p>
-                        <p className="text-xs text-zinc-500">{client.plan?.name ?? "Sin plan"}</p>
+                        <p className="text-sm font-medium text-zinc-50">{client.full_name}</p>
+                        <p className="text-xs text-zinc-400">{client.plan?.name ?? "Sin plan"}</p>
                       </div>
                     </div>
-                    <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+                    <span className="flex items-center gap-1 rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-medium text-amber-400">
                       <AlertTriangle size={12} /> Le quedan 2 sesiones
                     </span>
                   </li>
@@ -130,27 +130,27 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Link
           href="/attendance"
-          className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white p-4 text-sm font-medium text-zinc-900 shadow-sm transition-shadow hover:shadow-md"
+          className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-sm font-medium text-zinc-50 shadow-sm transition-shadow hover:shadow-md"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
             <CheckCircle2 size={18} />
           </span>
           Marcar asistencia
         </Link>
         <Link
           href="/payments"
-          className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white p-4 text-sm font-medium text-zinc-900 shadow-sm transition-shadow hover:shadow-md"
+          className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-sm font-medium text-zinc-50 shadow-sm transition-shadow hover:shadow-md"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/15 text-amber-400">
             <CreditCard size={18} />
           </span>
           Registrar pago
         </Link>
         <Link
           href="/clients"
-          className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white p-4 text-sm font-medium text-zinc-900 shadow-sm transition-shadow hover:shadow-md"
+          className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-sm font-medium text-zinc-50 shadow-sm transition-shadow hover:shadow-md"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-500/15 text-violet-400">
             <UserPlus size={18} />
           </span>
           Agregar cliente
