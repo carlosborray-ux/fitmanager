@@ -1,5 +1,8 @@
 export const WEEKDAYS = ["L", "M", "X", "J", "V", "S", "D"];
 export const WEEKDAYS_SHORT = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
+export const WEEKDAYS_FULL = [
+  "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo",
+];
 export const MONTH_NAMES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
