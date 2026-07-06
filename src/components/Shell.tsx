@@ -13,6 +13,8 @@ import {
   CalendarDays,
   ClipboardList,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 import { usingDemoData } from "@/lib/data-service";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
@@ -31,6 +33,7 @@ export default function Shell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [session, setSession] = useState<Session | null>(null);
   const [authChecked, setAuthChecked] = useState(!isSupabaseConfigured);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
@@ -53,6 +56,10 @@ export default function Shell({ children }: { children: ReactNode }) {
     }
   }, [session, authChecked, pathname, router]);
 
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
   async function handleLogout() {
     if (!supabase) return;
     await supabase.auth.signOut();
@@ -72,16 +79,66 @@ export default function Shell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-zinc-950 md:flex-row">
-      <aside className="hidden w-60 shrink-0 border-r border-zinc-800 bg-zinc-900 md:flex md:flex-col">
-        <div className="flex items-center gap-2.5 px-5 py-6">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-950/50">
-            <Dumbbell size={18} strokeWidth={2.5} />
+    <div className="flex min-h-screen w-full flex-col bg-zinc-950">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-zinc-800 bg-zinc-900 px-4 py-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="rounded-lg p-1.5 text-zinc-300 hover:bg-zinc-800"
+            aria-label="Abrir menu"
+          >
+            <Menu size={20} />
+          </button>
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-600 text-white">
+            <Dumbbell size={16} strokeWidth={2.5} />
           </span>
           <div>
             <p className="text-base font-bold leading-tight text-zinc-50">FitManager</p>
-            <p className="text-xs text-zinc-400">By Gabriel</p>
+            <p className="text-[10px] leading-tight text-zinc-400">By Gabriel</p>
           </div>
+        </div>
+        {usingDemoData ? (
+          <span className="rounded-full bg-amber-500/15 px-2 py-1 text-[10px] font-semibold text-amber-300">
+            DEMO
+          </span>
+        ) : (
+          session && (
+            <button onClick={handleLogout} className="flex items-center gap-1 text-xs font-medium text-zinc-400">
+              <LogOut size={13} /> Salir
+            </button>
+          )
+        )}
+      </header>
+
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[1px]"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 max-w-[80vw] flex-col border-r border-zinc-800 bg-zinc-900 shadow-xl transition-transform duration-200 ${
+          menuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between px-5 py-6">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-950/50">
+              <Dumbbell size={18} strokeWidth={2.5} />
+            </span>
+            <div>
+              <p className="text-base font-bold leading-tight text-zinc-50">FitManager</p>
+              <p className="text-xs text-zinc-400">By Gabriel</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setMenuOpen(false)}
+            className="rounded-full p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-50"
+            aria-label="Cerrar menu"
+          >
+            <X size={18} />
+          </button>
         </div>
         <nav className="flex flex-1 flex-col gap-1 px-3">
           {NAV_ITEMS.map(({ href, label, Icon }) => {
@@ -122,50 +179,9 @@ export default function Shell({ children }: { children: ReactNode }) {
         )}
       </aside>
 
-      <header className="flex items-center justify-between border-b border-zinc-800 bg-zinc-900 px-4 py-3 md:hidden">
-        <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-600 text-white">
-            <Dumbbell size={16} strokeWidth={2.5} />
-          </span>
-          <div>
-            <p className="text-base font-bold leading-tight text-zinc-50">FitManager</p>
-            <p className="text-[10px] leading-tight text-zinc-400">By Gabriel</p>
-          </div>
-        </div>
-        {usingDemoData ? (
-          <span className="rounded-full bg-amber-500/15 px-2 py-1 text-[10px] font-semibold text-amber-300">
-            DEMO
-          </span>
-        ) : (
-          session && (
-            <button onClick={handleLogout} className="flex items-center gap-1 text-xs font-medium text-zinc-400">
-              <LogOut size={13} /> Salir
-            </button>
-          )
-        )}
-      </header>
-
-      <main className="flex-1 overflow-y-auto pb-20 md:pb-6">
+      <main className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-5xl p-4 sm:p-6">{children}</div>
       </main>
-
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-zinc-800 bg-zinc-900/95 backdrop-blur md:hidden">
-        {NAV_ITEMS.map(({ href, label, Icon }) => {
-          const active = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium ${
-                active ? "text-violet-400" : "text-zinc-600"
-              }`}
-            >
-              <Icon size={19} strokeWidth={active ? 2.5 : 2} />
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
     </div>
   );
 }
