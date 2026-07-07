@@ -44,7 +44,6 @@ export default function PaymentsPage() {
   const [clientId, setClientId] = useState("");
   const [planId, setPlanId] = useState("");
   const [method, setMethod] = useState<PaymentMethod>("cash");
-  const [durationDays, setDurationDays] = useState(30);
   const [notes, setNotes] = useState("");
   const [installmentCount, setInstallmentCount] = useState(1);
   const [installmentAmounts, setInstallmentAmounts] = useState<string[]>(["0"]);
@@ -72,7 +71,6 @@ export default function PaymentsPage() {
     setPlanId(id);
     const plan = plansById.get(id);
     const total = plan?.price ?? 0;
-    setDurationDays(plan?.duration_days ?? 30);
     setInstallmentAmounts(splitAmount(total, count).map(String));
   }
 
@@ -91,7 +89,6 @@ export default function PaymentsPage() {
     setClientId(firstClient?.id ?? "");
     setPlanId(defaultPlanId);
     setMethod("cash");
-    setDurationDays(plan?.duration_days ?? 30);
     setNotes("");
     setInstallmentCount(1);
     setInstallmentAmounts([String(plan?.price ?? 0)]);
@@ -119,6 +116,7 @@ export default function PaymentsPage() {
     e.preventDefault();
     if (!clientId || !planId) return;
     const periodStart = installmentDates[0];
+    const durationDays = plansById.get(planId)?.duration_days ?? 30;
     await createPaymentInstallments({
       client_id: clientId,
       plan_id: planId,
@@ -350,29 +348,18 @@ export default function PaymentsPage() {
               ))}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Metodo">
-                <select
-                  value={method}
-                  onChange={(e) => setMethod(e.target.value as PaymentMethod)}
-                  className="input"
-                >
-                  <option value="cash">Efectivo</option>
-                  <option value="transfer">Transferencia</option>
-                  <option value="card">Tarjeta</option>
-                  <option value="other">Otro</option>
-                </select>
-              </Field>
-              <Field label="Dias que cubre">
-                <input
-                  type="number"
-                  min={1}
-                  value={durationDays}
-                  onChange={(e) => setDurationDays(Number(e.target.value))}
-                  className="input"
-                />
-              </Field>
-            </div>
+            <Field label="Metodo">
+              <select
+                value={method}
+                onChange={(e) => setMethod(e.target.value as PaymentMethod)}
+                className="input"
+              >
+                <option value="cash">Efectivo</option>
+                <option value="transfer">Transferencia</option>
+                <option value="card">Tarjeta</option>
+                <option value="other">Otro</option>
+              </select>
+            </Field>
             <Field label="Notas">
               <textarea
                 value={notes}
