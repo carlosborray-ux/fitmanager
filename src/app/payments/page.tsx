@@ -200,7 +200,7 @@ export default function PaymentsPage() {
             const total = group.reduce((sum, p) => sum + p.amount, 0);
             const plan = plansById.get(first.plan_id ?? "");
             return (
-              <div key={first.group_id} className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 shadow-sm">
+              <div key={first.group_id} className="card overflow-hidden">
                 <div className="flex items-center justify-between gap-3 border-b border-zinc-800 p-4">
                   <div className="flex items-center gap-3">
                     <Avatar name={first.client?.full_name ?? "?"} />
@@ -312,8 +312,8 @@ export default function PaymentsPage() {
                     onClick={() => changeInstallmentCount(count)}
                     className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                       installmentCount === count
-                        ? "border-violet-600 bg-violet-600 text-white"
-                        : "border-zinc-700 text-zinc-300 hover:bg-zinc-950"
+                        ? "border-emerald-600 bg-emerald-600 text-white"
+                        : "border-zinc-700 text-zinc-300 hover:bg-zinc-800"
                     }`}
                   >
                     {count === 1 ? "Completo" : `${count} cuotas`}

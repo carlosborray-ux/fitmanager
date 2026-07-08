@@ -194,7 +194,7 @@ export default function ClientProfilePage() {
         <ArrowLeft size={15} /> Volver a clientes
       </button>
 
-      <div className="flex flex-col justify-between gap-4 rounded-xl border border-zinc-800 bg-zinc-900 p-5 shadow-sm sm:flex-row sm:items-center">
+      <div className="card flex flex-col justify-between gap-4 p-5 sm:flex-row sm:items-center">
         <div className="flex items-center gap-4">
           <Avatar name={client.full_name} size={56} />
           <div>
@@ -224,16 +224,16 @@ export default function ClientProfilePage() {
           label="Cubre hasta"
           value={latestPeriod ? formatDate(latestPeriod.period_end) : "Sin pagos"}
           icon={Wallet}
-          accent={latestPeriod && latestPeriod.period_end < todayISO() ? "amber" : "violet"}
+          accent={latestPeriod && latestPeriod.period_end < todayISO() ? "amber" : "green"}
         />
       </div>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm">
+      <div className="card p-4">
         <h2 className="mb-2 font-semibold text-zinc-50">Notas</h2>
         <p className="text-sm text-zinc-400">{client.notes || "Sin notas."}</p>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 shadow-sm">
+      <div className="card">
         <h2 className="border-b border-zinc-800 p-4 font-semibold text-zinc-50">
           Historial de pagos y renovaciones
         </h2>
@@ -278,7 +278,7 @@ export default function ClientProfilePage() {
         )}
       </div>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 shadow-sm">
+      <div className="card">
         <div className="flex items-center justify-between border-b border-zinc-800 p-4">
           <h2 className="font-semibold text-zinc-50">Progreso de entrenamiento</h2>
           <button onClick={openLogForm} className="btn-primary">

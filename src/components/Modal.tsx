@@ -28,7 +28,7 @@ export default function Modal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-h-[90vh] overflow-y-auto rounded-t-2xl bg-zinc-900 p-5 shadow-xl transition-all duration-200 sm:max-w-lg sm:rounded-2xl ${
+        className={`w-full max-h-[90vh] overflow-y-auto rounded-t-2xl border border-zinc-800 bg-zinc-900 p-5 shadow-2xl shadow-black/50 transition-all duration-200 sm:max-w-lg sm:rounded-2xl ${
           visible ? "translate-y-0 opacity-100 sm:scale-100" : "translate-y-4 opacity-0 sm:scale-95"
         }`}
       >

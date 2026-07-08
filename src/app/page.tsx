@@ -99,9 +99,9 @@ export default function DashboardPage() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatCard label="Clientes activos" value={String(summary.activeClients)} icon={Users} accent="violet" />
+            <StatCard label="Clientes activos" value={String(summary.activeClients)} icon={Users} accent="green" />
             <StatCard label="Clientes totales" value={String(summary.totalClients)} icon={Users} accent="blue" />
-            <StatCard label="Asistencias hoy" value={String(summary.attendanceToday)} icon={CalendarCheck} accent="green" />
+            <StatCard label="Asistencias hoy" value={String(summary.attendanceToday)} icon={CalendarCheck} accent="violet" />
             <StatCard
               label="Ingresos del mes"
               value={formatCurrency(summary.revenueThisMonth)}
@@ -110,13 +110,13 @@ export default function DashboardPage() {
             />
           </div>
 
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm">
+          <div className="card p-4">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-zinc-50">Ingresos por mes</h2>
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setMonthOffset((o) => o - 1)}
-                  className="rounded-lg border border-zinc-800 p-1.5 hover:bg-zinc-950"
+                  className="rounded-lg border border-zinc-700 bg-zinc-800 p-1.5 text-zinc-300 transition-colors hover:border-zinc-600 hover:bg-zinc-700 hover:text-zinc-50"
                   aria-label="Mes anterior"
                 >
                   <ChevronLeft size={14} />
@@ -127,7 +127,7 @@ export default function DashboardPage() {
                 <button
                   onClick={() => setMonthOffset((o) => Math.min(o + 1, 0))}
                   disabled={monthOffset >= 0}
-                  className="rounded-lg border border-zinc-800 p-1.5 hover:bg-zinc-950 disabled:opacity-30"
+                  className="rounded-lg border border-zinc-700 bg-zinc-800 p-1.5 text-zinc-300 transition-colors hover:border-zinc-600 hover:bg-zinc-700 hover:text-zinc-50 disabled:opacity-30"
                   aria-label="Mes siguiente"
                 >
                   <ChevronRight size={14} />
@@ -141,10 +141,10 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm">
+          <div className="card p-4">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-semibold text-zinc-50">Cuotas pendientes ({pendingInstallments.length})</h2>
-              <Link href="/payments" className="text-sm font-medium text-violet-400 hover:underline">
+              <Link href="/payments" className="text-sm font-medium text-emerald-400 hover:underline">
                 Ver pagos
               </Link>
             </div>
@@ -191,10 +191,10 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm">
+          <div className="card p-4">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-semibold text-zinc-50">Clases de hoy ({todaySessions.length})</h2>
-              <Link href="/calendar" className="text-sm font-medium text-violet-400 hover:underline">
+              <Link href="/calendar" className="text-sm font-medium text-emerald-400 hover:underline">
                 Ver calendario
               </Link>
             </div>
@@ -225,12 +225,12 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm">
+          <div className="card p-4">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-semibold text-zinc-50">
                 Pagos vencidos o pendientes ({summary.overdueClients.length})
               </h2>
-              <Link href="/payments" className="text-sm font-medium text-violet-400 hover:underline">
+              <Link href="/payments" className="text-sm font-medium text-emerald-400 hover:underline">
                 Registrar pago
               </Link>
             </div>
@@ -259,7 +259,7 @@ export default function DashboardPage() {
           </div>
 
           {(summary.clientsWithOneSessionLeft.length > 0 || summary.clientsWithTwoSessionsLeft.length > 0) && (
-            <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm">
+            <div className="card p-4">
               <h2 className="mb-3 font-semibold text-zinc-50">Por renovar pronto</h2>
               <ul className="divide-y divide-zinc-800">
                 {summary.clientsWithOneSessionLeft.map((client) => (
@@ -299,7 +299,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Link
           href="/attendance"
-          className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-sm font-medium text-zinc-50 shadow-sm transition-shadow hover:shadow-md"
+          className="card flex items-center gap-3 p-4 text-sm font-medium text-zinc-50 transition-shadow hover:shadow-lg hover:shadow-black/30"
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
             <CheckCircle2 size={18} />
@@ -308,7 +308,7 @@ export default function DashboardPage() {
         </Link>
         <Link
           href="/payments"
-          className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-sm font-medium text-zinc-50 shadow-sm transition-shadow hover:shadow-md"
+          className="card flex items-center gap-3 p-4 text-sm font-medium text-zinc-50 transition-shadow hover:shadow-lg hover:shadow-black/30"
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/15 text-amber-400">
             <CreditCard size={18} />
@@ -317,7 +317,7 @@ export default function DashboardPage() {
         </Link>
         <Link
           href="/clients"
-          className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-sm font-medium text-zinc-50 shadow-sm transition-shadow hover:shadow-md"
+          className="card flex items-center gap-3 p-4 text-sm font-medium text-zinc-50 transition-shadow hover:shadow-lg hover:shadow-black/30"
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-500/15 text-violet-400">
             <UserPlus size={18} />

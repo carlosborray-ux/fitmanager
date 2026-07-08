@@ -141,7 +141,7 @@ export default function AttendancePage() {
               <li
                 key={client.id}
                 onClick={() => setCalendarClient(client)}
-                className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 shadow-sm transition-colors hover:border-violet-500/40 ${
+                className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 shadow-sm transition-colors hover:border-emerald-500/40 ${
                   marked ? "border-emerald-500/30 bg-emerald-500/10" : "border-zinc-800 bg-zinc-900"
                 }`}
               >
@@ -152,7 +152,7 @@ export default function AttendancePage() {
                     <div className="mt-1 flex items-center gap-2">
                       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-zinc-800">
                         <div
-                          className={`h-full rounded-full ${pct >= 100 ? "bg-emerald-500" : "bg-violet-500"}`}
+                          className={`h-full rounded-full ${pct >= 100 ? "bg-emerald-500" : "bg-blue-500"}`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -175,7 +175,7 @@ export default function AttendancePage() {
                   className={`flex shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 ${
                     marked
                       ? "bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/20"
-                      : "bg-violet-600 text-white hover:bg-violet-700"
+                      : "bg-emerald-600 text-white hover:bg-emerald-700"
                   }`}
                 >
                   {marked ? (

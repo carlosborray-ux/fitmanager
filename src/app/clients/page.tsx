@@ -123,7 +123,7 @@ export default function ClientsPage() {
           description="Prueba con otro nombre o agrega un nuevo cliente."
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 shadow-sm">
+        <div className="card overflow-hidden">
           <ul className="divide-y divide-zinc-800">
             {filtered.map((client) => (
               <li key={client.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">

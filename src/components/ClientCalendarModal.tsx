@@ -33,19 +33,19 @@ export default function ClientCalendarModal({
         </p>
       ) : (
         <div className="flex flex-col gap-4">
-          <div className="rounded-lg bg-violet-500/10 p-3">
-            <p className="text-sm font-medium text-violet-200">
+          <div className="rounded-lg bg-emerald-500/10 p-3">
+            <p className="text-sm font-medium text-emerald-200">
               Periodo: {formatDate(period.period_start)} - {formatDate(period.period_end)}
             </p>
             {target && (
               <div className="mt-2 flex items-center gap-2">
                 <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-zinc-900">
                   <div
-                    className={`h-full rounded-full ${used >= target ? "bg-emerald-500" : "bg-violet-500"}`}
+                    className={`h-full rounded-full ${used >= target ? "bg-emerald-500" : "bg-blue-500"}`}
                     style={{ width: `${Math.min(100, Math.round((used / target) * 100))}%` }}
                   />
                 </div>
-                <span className="shrink-0 text-xs font-medium text-violet-300">
+                <span className="shrink-0 text-xs font-medium text-emerald-300">
                   {used} de {target} sesiones
                 </span>
               </div>

@@ -104,7 +104,7 @@ export default function PlansPage() {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm transition-shadow hover:shadow-md"
+              className="card p-4 transition-shadow hover:shadow-lg hover:shadow-black/30"
             >
               <div className="flex items-start justify-between">
                 <div>
