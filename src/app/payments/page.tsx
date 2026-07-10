@@ -310,9 +310,9 @@ export default function PaymentsPage() {
                     key={count}
                     type="button"
                     onClick={() => changeInstallmentCount(count)}
-                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
                       installmentCount === count
-                        ? "border-emerald-600 bg-emerald-600 text-white"
+                        ? "border-transparent bg-gradient-to-r from-violet-600 to-fuchsia-500 text-white"
                         : "border-zinc-700 text-zinc-300 hover:bg-zinc-800"
                     }`}
                   >

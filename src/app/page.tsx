@@ -144,7 +144,7 @@ export default function DashboardPage() {
           <div className="card p-4">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-semibold text-zinc-50">Cuotas pendientes ({pendingInstallments.length})</h2>
-              <Link href="/payments" className="text-sm font-medium text-emerald-400 hover:underline">
+              <Link href="/payments" className="text-sm font-medium text-violet-400 hover:underline">
                 Ver pagos
               </Link>
             </div>
@@ -194,7 +194,7 @@ export default function DashboardPage() {
           <div className="card p-4">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-semibold text-zinc-50">Clases de hoy ({todaySessions.length})</h2>
-              <Link href="/calendar" className="text-sm font-medium text-emerald-400 hover:underline">
+              <Link href="/calendar" className="text-sm font-medium text-violet-400 hover:underline">
                 Ver calendario
               </Link>
             </div>
@@ -230,7 +230,7 @@ export default function DashboardPage() {
               <h2 className="font-semibold text-zinc-50">
                 Pagos vencidos o pendientes ({summary.overdueClients.length})
               </h2>
-              <Link href="/payments" className="text-sm font-medium text-emerald-400 hover:underline">
+              <Link href="/payments" className="text-sm font-medium text-violet-400 hover:underline">
                 Registrar pago
               </Link>
             </div>

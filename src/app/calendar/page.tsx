@@ -333,13 +333,13 @@ export default function CalendarPage() {
                 <div key={h} style={{ height: HOUR_HEIGHT }} className="group relative border-t border-zinc-800">
                   <button
                     onClick={() => openNewForm(currentDate, `${pad(h)}:00`, `${pad(h + 1)}:00`)}
-                    className="absolute inset-x-0 top-0 flex h-1/2 items-center justify-center text-[10px] text-emerald-400 opacity-0 hover:bg-emerald-500/10 sm:group-hover:opacity-100"
+                    className="absolute inset-x-0 top-0 flex h-1/2 items-center justify-center text-[10px] text-violet-400 opacity-0 hover:bg-violet-500/10 sm:group-hover:opacity-100"
                   >
                     clic para agregar
                   </button>
                   <button
                     onClick={() => openNewForm(currentDate, `${pad(h)}:30`, `${pad(h + 1)}:30`)}
-                    className="absolute inset-x-0 top-1/2 flex h-1/2 items-center justify-center text-[10px] text-emerald-400 opacity-0 hover:bg-emerald-500/10 sm:group-hover:opacity-100"
+                    className="absolute inset-x-0 top-1/2 flex h-1/2 items-center justify-center text-[10px] text-violet-400 opacity-0 hover:bg-violet-500/10 sm:group-hover:opacity-100"
                   >
                     clic para agregar
                   </button>
@@ -369,16 +369,16 @@ export default function CalendarPage() {
                       left: `${session.col * widthPct}%`,
                       width: `${widthPct}%`,
                     }}
-                    className="absolute z-[1] overflow-hidden rounded-md border border-emerald-500/40 bg-emerald-500/15 p-1.5 text-left shadow-sm hover:bg-emerald-500/20"
+                    className="absolute z-[1] overflow-hidden rounded-md border border-violet-500/40 bg-violet-500/15 p-1.5 text-left shadow-sm hover:bg-violet-500/20"
                   >
-                    <p className="truncate text-xs font-semibold text-emerald-200">
+                    <p className="truncate text-xs font-semibold text-violet-200">
                       {session.title || `${attendeeNames.length} cliente(s)`}
                     </p>
-                    <p className="truncate text-[11px] text-emerald-300">
+                    <p className="truncate text-[11px] text-violet-300">
                       {session.start_time} - {session.end_time}
                     </p>
                     {attendeeNames.length > 0 && (
-                      <p className="truncate text-[10px] text-emerald-400">{attendeeNames.join(", ")}</p>
+                      <p className="truncate text-[10px] text-violet-400">{attendeeNames.join(", ")}</p>
                     )}
                   </button>
                 );
@@ -451,7 +451,7 @@ export default function CalendarPage() {
                         type="checkbox"
                         checked={selectedClientIds.includes(c.id)}
                         onChange={() => toggleClient(c.id)}
-                        className="h-4 w-4 rounded border-zinc-700 text-emerald-400 focus:ring-emerald-500"
+                        className="h-4 w-4 rounded border-zinc-700 text-violet-400 focus:ring-violet-500"
                       />
                       <Avatar name={c.full_name} size={24} />
                       {c.full_name}
@@ -498,7 +498,7 @@ export default function CalendarPage() {
                     type="checkbox"
                     checked={repeatEnabled}
                     onChange={(e) => setRepeatEnabled(e.target.checked)}
-                    className="h-4 w-4 rounded border-zinc-700 text-emerald-400 focus:ring-emerald-500"
+                    className="h-4 w-4 rounded border-zinc-700 text-violet-400 focus:ring-violet-500"
                   />
                   Repetir semanalmente
                 </label>
@@ -511,7 +511,7 @@ export default function CalendarPage() {
                           type="button"
                           onClick={() => toggleRepeatDay(i)}
                           className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
-                            repeatDays.has(i) ? "bg-emerald-600 text-white" : "bg-zinc-800 text-zinc-400"
+                            repeatDays.has(i) ? "bg-gradient-to-br from-violet-600 to-fuchsia-500 text-white" : "bg-zinc-800 text-zinc-400"
                           }`}
                         >
                           {label}
@@ -542,7 +542,7 @@ export default function CalendarPage() {
                     onClick={() => setApplyScope("one")}
                     className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                       applyScope === "one"
-                        ? "border-emerald-600 bg-emerald-600 text-white"
+                        ? "border-transparent bg-gradient-to-r from-violet-600 to-fuchsia-500 text-white"
                         : "border-zinc-700 text-zinc-300 hover:bg-zinc-800"
                     }`}
                   >
@@ -553,7 +553,7 @@ export default function CalendarPage() {
                     onClick={() => setApplyScope("future")}
                     className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                       applyScope === "future"
-                        ? "border-emerald-600 bg-emerald-600 text-white"
+                        ? "border-transparent bg-gradient-to-r from-violet-600 to-fuchsia-500 text-white"
                         : "border-zinc-700 text-zinc-300 hover:bg-zinc-800"
                     }`}
                   >

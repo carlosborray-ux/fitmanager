@@ -30,11 +30,11 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
       <div className="card w-full max-w-sm rounded-2xl p-6">
         <div className="mb-6 flex flex-col items-center gap-2 text-center">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm shadow-emerald-950/50">
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-sm shadow-violet-950/50">
             <Dumbbell size={22} strokeWidth={2.5} />
           </span>
           <div>
-            <p className="text-lg font-bold text-zinc-50">FitManager</p>
+            <p className="bg-gradient-to-r from-violet-300 to-fuchsia-300 bg-clip-text text-lg font-bold text-transparent">FitManager</p>
             <p className="text-xs text-zinc-400">By Gabriel</p>
           </div>
         </div>

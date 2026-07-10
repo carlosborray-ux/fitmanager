@@ -1,10 +1,10 @@
 import { LucideIcon } from "lucide-react";
 
 const palettes = {
-  green: { icon: "bg-emerald-500/15 text-emerald-400", value: "text-zinc-50" },
-  violet: { icon: "bg-violet-500/15 text-violet-400", value: "text-violet-400" },
-  amber: { icon: "bg-amber-500/15 text-amber-400", value: "text-amber-400" },
-  blue: { icon: "bg-blue-500/15 text-blue-400", value: "text-zinc-50" },
+  green: { icon: "bg-gradient-to-br from-emerald-500 to-teal-400 text-white shadow-emerald-950/40" },
+  violet: { icon: "bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-violet-950/40" },
+  amber: { icon: "bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-amber-950/40" },
+  blue: { icon: "bg-gradient-to-br from-blue-500 to-cyan-400 text-white shadow-blue-950/40" },
 } as const;
 
 export default function StatCard({
@@ -23,11 +23,11 @@ export default function StatCard({
     <div className="card p-4 transition-shadow hover:shadow-lg hover:shadow-black/30">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-zinc-400">{label}</p>
-        <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${palette.icon}`}>
+        <span className={`flex h-8 w-8 items-center justify-center rounded-lg shadow-sm ${palette.icon}`}>
           <Icon size={16} strokeWidth={2.25} />
         </span>
       </div>
-      <p className={`mt-2 text-2xl font-semibold ${palette.value}`}>{value}</p>
+      <p className="mt-2 text-2xl font-semibold text-zinc-50">{value}</p>
     </div>
   );
 }

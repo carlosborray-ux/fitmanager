@@ -89,11 +89,13 @@ export default function Shell({ children }: { children: ReactNode }) {
           >
             <Menu size={20} />
           </button>
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-sm shadow-violet-950/50">
             <Dumbbell size={16} strokeWidth={2.5} />
           </span>
           <div>
-            <p className="text-base font-bold leading-tight text-zinc-50">FitManager</p>
+            <p className="bg-gradient-to-r from-violet-300 to-fuchsia-300 bg-clip-text text-base font-bold leading-tight text-transparent">
+              FitManager
+            </p>
             <p className="text-[10px] leading-tight text-zinc-400">By Gabriel</p>
           </div>
         </div>
@@ -124,11 +126,13 @@ export default function Shell({ children }: { children: ReactNode }) {
       >
         <div className="flex items-center justify-between px-5 py-6">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm shadow-emerald-950/50">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-sm shadow-violet-950/50">
               <Dumbbell size={18} strokeWidth={2.5} />
             </span>
             <div>
-              <p className="text-base font-bold leading-tight text-zinc-50">FitManager</p>
+              <p className="bg-gradient-to-r from-violet-300 to-fuchsia-300 bg-clip-text text-base font-bold leading-tight text-transparent">
+                FitManager
+              </p>
               <p className="text-xs text-zinc-400">By Gabriel</p>
             </div>
           </div>
@@ -149,7 +153,7 @@ export default function Shell({ children }: { children: ReactNode }) {
                 href={href}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   active
-                    ? "bg-emerald-600 text-white shadow-sm shadow-emerald-950/50"
+                    ? "bg-gradient-to-r from-violet-600 to-fuchsia-500 text-white shadow-sm shadow-violet-950/50"
                     : "text-zinc-400 hover:bg-zinc-800"
                 }`}
               >

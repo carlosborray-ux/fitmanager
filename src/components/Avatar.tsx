@@ -1,10 +1,10 @@
 const PALETTE = [
-  "bg-violet-500/15 text-violet-300",
-  "bg-blue-500/15 text-blue-400",
-  "bg-emerald-500/15 text-emerald-400",
-  "bg-amber-500/15 text-amber-400",
-  "bg-rose-500/15 text-rose-400",
-  "bg-cyan-500/15 text-cyan-400",
+  "bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white",
+  "bg-gradient-to-br from-blue-500 to-cyan-400 text-white",
+  "bg-gradient-to-br from-emerald-500 to-teal-400 text-white",
+  "bg-gradient-to-br from-amber-500 to-orange-500 text-white",
+  "bg-gradient-to-br from-rose-500 to-pink-500 text-white",
+  "bg-gradient-to-br from-cyan-500 to-blue-400 text-white",
 ];
 
 function colorFor(name: string): string {
