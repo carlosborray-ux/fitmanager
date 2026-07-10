@@ -71,7 +71,7 @@ export default function Shell({ children }: { children: ReactNode }) {
   }
 
   if (isSupabaseConfigured && !authChecked) {
-    return <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-sm text-zinc-400">Cargando...</div>;
+    return <div className="flex min-h-screen items-center justify-center text-sm text-zinc-400">Cargando...</div>;
   }
 
   if (isSupabaseConfigured && !session) {
@@ -79,8 +79,8 @@ export default function Shell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-zinc-950">
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-zinc-800 bg-zinc-900 px-4 py-3">
+    <div className="flex min-h-screen w-full flex-col">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-zinc-800 bg-zinc-900/70 px-4 py-3 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMenuOpen(true)}

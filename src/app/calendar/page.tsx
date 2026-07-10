@@ -293,13 +293,21 @@ export default function CalendarPage() {
     c.full_name.toLowerCase().includes(clientSearch.toLowerCase())
   );
 
+  const todayIndex = weekDays.indexOf(today);
+  const now = new Date();
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const showNowLine = todayIndex !== -1 && nowMinutes >= HOUR_START * 60 && nowMinutes <= HOUR_END * 60;
+  const nowTop = ((nowMinutes - HOUR_START * 60) / 60) * HOUR_HEIGHT;
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold capitalize text-zinc-50">{weekRangeLabel}</h1>
+          <h1 className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-2xl font-extrabold uppercase tracking-wide text-transparent">
+            Agenda
+          </h1>
           <p className="text-sm text-zinc-400">
-            {weekSessionCount} clase{weekSessionCount === 1 ? "" : "s"} esta semana
+            {weekRangeLabel} · {weekSessionCount} clase{weekSessionCount === 1 ? "" : "s"}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -324,19 +332,19 @@ export default function CalendarPage() {
         <div className="h-96 animate-pulse rounded-xl bg-zinc-800" />
       ) : (
         <div
-          className="card overflow-x-auto"
+          className="relative overflow-x-auto rounded-xl border border-zinc-800/60"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
           <div className="relative grid" style={{ gridTemplateColumns: "48px repeat(7, minmax(112px, 1fr))", minWidth: 850 }}>
-            <div className="sticky left-0 top-0 z-20 bg-zinc-900" />
+            <div className="sticky left-0 top-0 z-20 border-b border-zinc-800/60 bg-[#120c1e]/90 backdrop-blur-sm" />
             {weekDays.map((dateIso) => {
               const d = new Date(`${dateIso}T00:00:00`);
               const isToday = dateIso === today;
               return (
                 <div
                   key={dateIso}
-                  className={`sticky top-0 z-10 flex flex-col items-center gap-0.5 border-b border-l border-zinc-800 bg-zinc-900 py-2 ${
+                  className={`sticky top-0 z-10 flex flex-col items-center gap-0.5 border-b border-l border-zinc-800/60 bg-[#120c1e]/90 py-2 backdrop-blur-sm ${
                     isToday ? "bg-violet-500/20" : ""
                   }`}
                 >
@@ -359,21 +367,30 @@ export default function CalendarPage() {
                 <div
                   key={h}
                   style={{ height: HOUR_HEIGHT }}
-                  className="sticky left-0 z-10 border-t border-zinc-800 bg-zinc-900 pr-1.5 text-right text-[10px] text-zinc-600"
+                  className="sticky left-0 z-10 border-t border-zinc-800/60 bg-[#120c1e]/90 pr-1.5 text-right text-[10px] text-zinc-600 backdrop-blur-sm"
                 >
                   <span className="relative -top-1.5">{formatHourLabel(h)}</span>
                 </div>
               ))}
             </div>
 
-            {weekDays.map((dateIso) => {
+            {weekDays.map((dateIso, dayIndex) => {
               const daySessions = layoutDaySessions(sessionsByDate.get(dateIso) ?? []);
               const isToday = dateIso === today;
               return (
                 <div
                   key={dateIso}
-                  className={`relative border-l border-zinc-800 ${isToday ? "bg-violet-500/5" : ""}`}
+                  className={`relative border-l border-zinc-800/60 ${isToday ? "bg-violet-500/5" : ""}`}
                 >
+                  {isToday && showNowLine && (
+                    <div
+                      className="pointer-events-none absolute z-[2] flex items-center"
+                      style={{ top: nowTop, left: 0, width: `${(7 - dayIndex) * 100}%` }}
+                    >
+                      <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-red-500 shadow shadow-red-500/60" />
+                      <span className="h-px flex-1 bg-red-500/70" />
+                    </div>
+                  )}
                   {hours.map((h) => (
                     <div key={h} style={{ height: HOUR_HEIGHT }} className="group relative border-t border-zinc-800">
                       <button
