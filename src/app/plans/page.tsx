@@ -90,7 +90,7 @@ export default function PlansPage() {
       </div>
 
       {atLimit && (
-        <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+        <p className="rounded-lg bg-amber-500/20 px-3 py-2 text-xs text-amber-300">
           Alcanzaste el limite de {MAX_PLANS} planes. Elimina uno que ya no uses para crear otro.
         </p>
       )}
@@ -127,7 +127,7 @@ export default function PlansPage() {
                   </button>
                   <button
                     onClick={() => setDeleteTarget(plan)}
-                    className="rounded-lg p-1.5 text-red-400 hover:bg-red-500/10"
+                    className="rounded-lg p-1.5 text-red-400 hover:bg-red-500/20"
                     aria-label="Eliminar plan"
                   >
                     <Trash2 size={14} />

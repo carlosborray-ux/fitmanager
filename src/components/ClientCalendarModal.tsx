@@ -33,7 +33,7 @@ export default function ClientCalendarModal({
         </p>
       ) : (
         <div className="flex flex-col gap-4">
-          <div className="rounded-lg bg-violet-500/10 p-3">
+          <div className="rounded-lg bg-violet-500/20 p-3">
             <p className="text-sm font-medium text-violet-200">
               Periodo: {formatDate(period.period_start)} - {formatDate(period.period_end)}
             </p>

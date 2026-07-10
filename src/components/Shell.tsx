@@ -100,7 +100,7 @@ export default function Shell({ children }: { children: ReactNode }) {
           </div>
         </div>
         {usingDemoData ? (
-          <span className="rounded-full bg-amber-500/15 px-2 py-1 text-[10px] font-semibold text-amber-300">
+          <span className="rounded-full bg-amber-500/25 px-2 py-1 text-[10px] font-semibold text-amber-300">
             DEMO
           </span>
         ) : (
@@ -164,7 +164,7 @@ export default function Shell({ children }: { children: ReactNode }) {
           })}
         </nav>
         {usingDemoData ? (
-          <div className="m-3 rounded-lg bg-amber-500/10 p-3 text-xs text-amber-300">
+          <div className="m-3 rounded-lg bg-amber-500/20 p-3 text-xs text-amber-300">
             Modo demo: datos guardados solo en este navegador. Conecta Supabase
             para usar datos reales.
           </div>

@@ -302,7 +302,7 @@ export default function ClientProfilePage() {
                 </div>
                 <button
                   onClick={() => handleDeleteLog(log.id)}
-                  className="rounded-lg p-1.5 text-red-400 hover:bg-red-500/10"
+                  className="rounded-lg p-1.5 text-red-400 hover:bg-red-500/20"
                   aria-label="Eliminar registro"
                 >
                   <Trash2 size={14} />

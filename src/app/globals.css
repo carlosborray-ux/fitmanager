@@ -14,8 +14,8 @@
 
 body {
   background:
-    radial-gradient(ellipse 900px 600px at 85% -5%, rgba(139, 92, 246, 0.16), transparent 60%),
-    radial-gradient(ellipse 800px 500px at -5% 100%, rgba(217, 70, 239, 0.10), transparent 60%),
+    radial-gradient(ellipse 900px 600px at 85% -5%, rgba(139, 92, 246, 0.28), transparent 60%),
+    radial-gradient(ellipse 800px 500px at -5% 100%, rgba(217, 70, 239, 0.20), transparent 60%),
     var(--background);
   background-attachment: fixed;
   color: var(--foreground);
@@ -34,9 +34,9 @@ body {
     @apply inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-zinc-600 hover:bg-zinc-800;
   }
   .btn-danger {
-    @apply inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/10;
+    @apply inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/20;
   }
   .card {
-    @apply rounded-xl border border-zinc-800 bg-zinc-900/80 shadow-md shadow-black/20 backdrop-blur-sm;
+    @apply rounded-xl border border-zinc-700 bg-zinc-900/80 shadow-lg shadow-black/30 backdrop-blur-sm;
   }
 }

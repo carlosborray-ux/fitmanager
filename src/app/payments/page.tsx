@@ -233,8 +233,8 @@ export default function PaymentsPage() {
                           <span
                             className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
                               payment.paid
-                                ? "bg-emerald-500/15 text-emerald-400"
-                                : "bg-amber-500/15 text-amber-400"
+                                ? "bg-emerald-500/25 text-emerald-400"
+                                : "bg-amber-500/25 text-amber-400"
                             }`}
                           >
                             {payment.paid ? "Pagada" : "Pendiente"}
@@ -255,7 +255,7 @@ export default function PaymentsPage() {
                         </button>
                         <button
                           onClick={() => handleDelete(payment.id)}
-                          className="rounded-lg p-1.5 text-red-400 hover:bg-red-500/10"
+                          className="rounded-lg p-1.5 text-red-400 hover:bg-red-500/20"
                           aria-label="Eliminar cuota"
                         >
                           <Trash2 size={14} />

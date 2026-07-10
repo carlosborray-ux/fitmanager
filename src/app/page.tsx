@@ -30,13 +30,13 @@ const MAX_VISIBLE_INSTALLMENTS = 8;
 function installmentAlarm(remaining: number, dueDateISO: string) {
   if (remaining < 0) {
     const days = Math.abs(remaining);
-    return { label: `Vencida hace ${days} dia${days === 1 ? "" : "s"}`, tone: "bg-red-500/15 text-red-400" };
+    return { label: `Vencida hace ${days} dia${days === 1 ? "" : "s"}`, tone: "bg-red-500/25 text-red-400" };
   }
   if (remaining === 0) {
-    return { label: "Vence hoy", tone: "bg-red-500/15 text-red-400" };
+    return { label: "Vence hoy", tone: "bg-red-500/25 text-red-400" };
   }
   if (remaining <= 3) {
-    return { label: `Vence en ${remaining} dia${remaining === 1 ? "" : "s"}`, tone: "bg-amber-500/15 text-amber-400" };
+    return { label: `Vence en ${remaining} dia${remaining === 1 ? "" : "s"}`, tone: "bg-amber-500/25 text-amber-400" };
   }
   if (remaining <= 7) {
     return { label: `Vence en ${remaining} dias`, tone: "bg-zinc-800 text-zinc-300" };
@@ -271,7 +271,7 @@ export default function DashboardPage() {
                         <p className="text-xs text-zinc-400">{client.plan?.name ?? "Sin plan"}</p>
                       </div>
                     </div>
-                    <span className="flex items-center gap-1 rounded-full bg-red-500/15 px-2.5 py-0.5 text-xs font-medium text-red-400">
+                    <span className="flex items-center gap-1 rounded-full bg-red-500/25 px-2.5 py-0.5 text-xs font-medium text-red-400">
                       <AlertTriangle size={12} /> Le queda 1 sesion
                     </span>
                   </li>
@@ -285,7 +285,7 @@ export default function DashboardPage() {
                         <p className="text-xs text-zinc-400">{client.plan?.name ?? "Sin plan"}</p>
                       </div>
                     </div>
-                    <span className="flex items-center gap-1 rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-medium text-amber-400">
+                    <span className="flex items-center gap-1 rounded-full bg-amber-500/25 px-2.5 py-0.5 text-xs font-medium text-amber-400">
                       <AlertTriangle size={12} /> Le quedan 2 sesiones
                     </span>
                   </li>
@@ -301,7 +301,7 @@ export default function DashboardPage() {
           href="/attendance"
           className="card flex items-center gap-3 p-4 text-sm font-medium text-zinc-50 transition-shadow hover:shadow-lg hover:shadow-black/30"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/25 text-emerald-400">
             <CheckCircle2 size={18} />
           </span>
           Marcar asistencia
@@ -310,7 +310,7 @@ export default function DashboardPage() {
           href="/payments"
           className="card flex items-center gap-3 p-4 text-sm font-medium text-zinc-50 transition-shadow hover:shadow-lg hover:shadow-black/30"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/15 text-amber-400">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/25 text-amber-400">
             <CreditCard size={18} />
           </span>
           Registrar pago
@@ -319,7 +319,7 @@ export default function DashboardPage() {
           href="/clients"
           className="card flex items-center gap-3 p-4 text-sm font-medium text-zinc-50 transition-shadow hover:shadow-lg hover:shadow-black/30"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-500/15 text-violet-400">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-500/25 text-violet-400">
             <UserPlus size={18} />
           </span>
           Agregar cliente

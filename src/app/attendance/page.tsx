@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import confetti from "canvas-confetti";
 import { CheckCircle2, RotateCcw, Search, Users } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import EmptyState from "@/components/EmptyState";
@@ -56,7 +57,7 @@ export default function AttendancePage() {
     c.full_name.toLowerCase().includes(search.toLowerCase())
   );
 
-  async function handleToggle(client: Client) {
+  async function handleToggle(client: Client, origin?: { x: number; y: number }) {
     setBusyId(client.id);
     try {
       const existing = attendance.find(
@@ -68,6 +69,13 @@ export default function AttendancePage() {
       } else {
         const created = await checkInClient(client.id, selectedDate);
         setAttendance((prev) => [created, ...prev]);
+        confetti({
+          particleCount: 70,
+          spread: 70,
+          startVelocity: 32,
+          origin: origin ?? { x: 0.5, y: 0.6 },
+          colors: ["#8b5cf6", "#d946ef", "#22c55e", "#f59e0b", "#3b82f6"],
+        });
       }
     } finally {
       setBusyId(null);
@@ -142,7 +150,7 @@ export default function AttendancePage() {
                 key={client.id}
                 onClick={() => setCalendarClient(client)}
                 className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 shadow-sm transition-colors hover:border-violet-500/40 ${
-                  marked ? "border-emerald-500/30 bg-emerald-500/10" : "border-zinc-800 bg-zinc-900"
+                  marked ? "border-emerald-500/30 bg-emerald-500/20" : "border-zinc-800 bg-zinc-900"
                 }`}
               >
                 <Avatar name={client.full_name} size={38} />
@@ -172,11 +180,15 @@ export default function AttendancePage() {
                   disabled={busyId === client.id}
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleToggle(client);
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    handleToggle(client, {
+                      x: (rect.left + rect.width / 2) / window.innerWidth,
+                      y: (rect.top + rect.height / 2) / window.innerHeight,
+                    });
                   }}
                   className={`flex shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 ${
                     marked
-                      ? "bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/20"
+                      ? "bg-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20"
                       : "bg-gradient-to-r from-violet-600 to-fuchsia-500 text-white hover:brightness-110"
                   }`}
                 >

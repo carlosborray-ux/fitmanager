@@ -40,7 +40,7 @@ export default function LoginPage() {
         </div>
 
         {!isSupabaseConfigured ? (
-          <p className="rounded-lg bg-amber-500/10 p-3 text-center text-sm text-amber-300">
+          <p className="rounded-lg bg-amber-500/20 p-3 text-center text-sm text-amber-300">
             Estas en modo demo (sin Supabase conectado), no necesitas iniciar sesion.
             Vuelve al <a href="/" className="font-medium underline">resumen</a>.
           </p>
