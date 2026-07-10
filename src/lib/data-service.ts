@@ -285,7 +285,7 @@ export async function checkInClient(
   dateISO: string,
   notes?: string
 ): Promise<AttendanceRecord> {
-  const checkedInAt = dateISO === todayISO() ? new Date().toISOString() : `${dateISO}T12:00:00.000Z`;
+  const checkedInAt = `${dateISO}T12:00:00.000Z`;
   if (usingDemoData) {
     const db = demoDb.get();
     const created: AttendanceRecord = {
