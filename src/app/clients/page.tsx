@@ -14,7 +14,6 @@ import {
   listPlans,
   saveClient,
 } from "@/lib/data-service";
-import { formatDate } from "@/lib/format";
 import { Client, ClientStatus, Plan } from "@/lib/types";
 
 const emptyForm = {
@@ -123,38 +122,39 @@ export default function ClientsPage() {
           description="Prueba con otro nombre o agrega un nuevo cliente."
         />
       ) : (
-        <div className="card overflow-hidden">
-          <ul className="divide-y divide-zinc-800">
-            {filtered.map((client) => (
-              <li key={client.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <Link href={`/clients/${client.id}`} className="flex items-center gap-3 hover:opacity-80">
-                  <Avatar name={client.full_name} />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-zinc-50">{client.full_name}</p>
-                      <StatusBadge status={client.status} />
-                    </div>
-                    <p className="text-xs text-zinc-400">
-                      {client.plan?.name ?? "Sin plan"} · Desde {formatDate(client.start_date)}
-                    </p>
-                    {(client.phone || client.email) && (
-                      <p className="text-xs text-zinc-600">
-                        {[client.phone, client.email].filter(Boolean).join(" · ")}
-                      </p>
-                    )}
-                  </div>
-                </Link>
-                <div className="flex gap-2 pl-[52px] sm:pl-0">
-                  <button onClick={() => openEdit(client)} className="btn-secondary">
-                    <Pencil size={13} /> Editar
-                  </button>
-                  <button onClick={() => handleDelete(client.id)} className="btn-danger">
-                    <Trash2 size={13} /> Eliminar
-                  </button>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+          {filtered.map((client) => (
+            <div key={client.id} className="card flex flex-col items-center gap-2 p-3 text-center">
+              <Link href={`/clients/${client.id}`} className="flex flex-col items-center gap-2 hover:opacity-80">
+                <Avatar name={client.full_name} size={48} />
+                <div>
+                  <p className="line-clamp-2 text-sm font-medium leading-tight text-zinc-50">
+                    {client.full_name}
+                  </p>
+                  <p className="mt-0.5 truncate text-[11px] text-zinc-400">
+                    {client.plan?.name ?? "Sin plan"}
+                  </p>
                 </div>
-              </li>
-            ))}
-          </ul>
+              </Link>
+              <StatusBadge status={client.status} />
+              <div className="mt-1 flex gap-1.5">
+                <button
+                  onClick={() => openEdit(client)}
+                  className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-50"
+                  aria-label="Editar cliente"
+                >
+                  <Pencil size={14} />
+                </button>
+                <button
+                  onClick={() => handleDelete(client.id)}
+                  className="rounded-lg p-1.5 text-red-400 hover:bg-red-500/20"
+                  aria-label="Eliminar cliente"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
