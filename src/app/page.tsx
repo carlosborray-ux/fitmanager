@@ -135,10 +135,15 @@ export default function DashboardPage() {
               </div>
             </div>
             <p className="mt-2 text-2xl font-bold text-amber-400">{formatCurrency(selectedMonthRevenue)}</p>
-            <p className="text-xs text-zinc-400">
-              {selectedMonthPayments.length} pago{selectedMonthPayments.length === 1 ? "" : "s"} registrado
-              {selectedMonthPayments.length === 1 ? "" : "s"} este mes
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-zinc-400">
+                {selectedMonthPayments.length} pago{selectedMonthPayments.length === 1 ? "" : "s"} registrado
+                {selectedMonthPayments.length === 1 ? "" : "s"} este mes
+              </p>
+              <Link href="/reports" className="text-xs font-medium text-violet-400 hover:underline">
+                Ver historial completo
+              </Link>
+            </div>
           </div>
 
           <div className="card p-4">

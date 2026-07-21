@@ -12,6 +12,7 @@ import {
   CalendarCheck,
   CalendarDays,
   ClipboardList,
+  Receipt,
   LogOut,
   Menu,
   X,
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { href: "/clients", label: "Clientes", Icon: Users },
   { href: "/calendar", label: "Calendario", Icon: CalendarDays },
   { href: "/payments", label: "Pagos", Icon: CreditCard },
+  { href: "/reports", label: "Ingresos", Icon: Receipt },
   { href: "/attendance", label: "Asistencia", Icon: CalendarCheck },
   { href: "/plans", label: "Planes", Icon: ClipboardList },
 ];
