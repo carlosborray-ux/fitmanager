@@ -13,6 +13,7 @@ import {
   CalendarDays,
   ClipboardList,
   Receipt,
+  StickyNote,
   LogOut,
   Menu,
   X,
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
   { href: "/payments", label: "Pagos", Icon: CreditCard },
   { href: "/reports", label: "Ingresos", Icon: Receipt },
   { href: "/attendance", label: "Asistencia", Icon: CalendarCheck },
+  { href: "/notes", label: "Notas", Icon: StickyNote },
   { href: "/plans", label: "Planes", Icon: ClipboardList },
 ];
 

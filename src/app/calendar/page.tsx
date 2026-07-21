@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Plus, Trash2, X } from "lucide-react";
+import { CalendarClock, ChevronLeft, ChevronRight, Plus, Trash2, X } from "lucide-react";
 import Modal from "@/components/Modal";
 import Avatar from "@/components/Avatar";
-import { MONTH_NAMES, WEEKDAYS, WEEKDAYS_SHORT, addDays, startOfWeek, toISODate } from "@/lib/calendar-utils";
+import EmptyState from "@/components/EmptyState";
+import { MONTH_NAMES, WEEKDAYS, WEEKDAYS_FULL, addDays, monthMatrix, toISODate } from "@/lib/calendar-utils";
 import {
   createRecurringClassSessions,
   deleteClassSession,
@@ -17,38 +18,10 @@ import {
 import { todayISO } from "@/lib/format";
 import { Client, ClassSession } from "@/lib/types";
 
-const HOUR_START = 5;
-const HOUR_END = 24;
-const HOUR_HEIGHT = 56;
-
-function pad(n: number): string {
-  return String(n).padStart(2, "0");
-}
-
-function timeToMinutes(t: string): number {
-  const [h, m] = t.split(":").map(Number);
-  return h * 60 + m;
-}
-
-function formatHourLabel(hour: number): string {
-  const period = hour < 12 ? "AM" : "PM";
-  const h12 = hour % 12 === 0 ? 12 : hour % 12;
-  return `${h12} ${period}`;
-}
-
-function formatWeekRangeLabel(weekStart: Date): string {
-  const weekEnd = addDays(weekStart, 6);
-  const sameMonth = weekStart.getMonth() === weekEnd.getMonth();
-  const sameYear = weekStart.getFullYear() === weekEnd.getFullYear();
-  const startMonth = MONTH_NAMES[weekStart.getMonth()].toLowerCase();
-  const endMonth = MONTH_NAMES[weekEnd.getMonth()].toLowerCase();
-  if (sameMonth) {
-    return `${weekStart.getDate()} - ${weekEnd.getDate()} de ${startMonth} de ${weekEnd.getFullYear()}`;
-  }
-  if (sameYear) {
-    return `${weekStart.getDate()} de ${startMonth} - ${weekEnd.getDate()} de ${endMonth} de ${weekEnd.getFullYear()}`;
-  }
-  return `${weekStart.getDate()} de ${startMonth} de ${weekStart.getFullYear()} - ${weekEnd.getDate()} de ${endMonth} de ${weekEnd.getFullYear()}`;
+function formatSelectedDayLabel(iso: string): string {
+  const d = new Date(`${iso}T00:00:00`);
+  const weekday = WEEKDAYS_FULL[(d.getDay() + 6) % 7];
+  return `${weekday} ${d.getDate()} de ${MONTH_NAMES[d.getMonth()].toLowerCase()}`;
 }
 
 function generateRecurringDates(startDate: string, untilDate: string, weekdays: Set<number>): string[] {
@@ -63,32 +36,10 @@ function generateRecurringDates(startDate: string, untilDate: string, weekdays: 
   return dates;
 }
 
-interface LaidOutSession extends ClassSession {
-  col: number;
-  colCount: number;
-}
-
-function layoutDaySessions(sessions: ClassSession[]): LaidOutSession[] {
-  const sorted = [...sessions].sort((a, b) => (a.start_time < b.start_time ? -1 : 1));
-  const columnEnds: string[] = [];
-  const placed: (ClassSession & { col: number })[] = [];
-  for (const s of sorted) {
-    let col = columnEnds.findIndex((end) => end <= s.start_time);
-    if (col === -1) {
-      col = columnEnds.length;
-      columnEnds.push(s.end_time);
-    } else {
-      columnEnds[col] = s.end_time;
-    }
-    placed.push({ ...s, col });
-  }
-  const colCount = columnEnds.length || 1;
-  return placed.map((p) => ({ ...p, colCount }));
-}
-
 export default function CalendarPage() {
   const today = todayISO();
-  const [refDate, setRefDate] = useState(today);
+  const [viewDate, setViewDate] = useState(today);
+  const [selectedDate, setSelectedDate] = useState(today);
   const [sessions, setSessions] = useState<ClassSession[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,25 +80,23 @@ export default function CalendarPage() {
     return map;
   }, [sessions]);
 
-  const hours = useMemo(
-    () => Array.from({ length: HOUR_END - HOUR_START }, (_, i) => HOUR_START + i),
-    []
-  );
+  const viewD = new Date(`${viewDate}T00:00:00`);
+  const year = viewD.getFullYear();
+  const month = viewD.getMonth();
+  const weeks = useMemo(() => monthMatrix(year, month), [year, month]);
+  const monthLabel = `${MONTH_NAMES[month]} ${year}`;
 
-  const weekStart = useMemo(() => startOfWeek(refDate), [refDate]);
-  const weekDays = useMemo(
-    () => Array.from({ length: 7 }, (_, i) => toISODate(addDays(weekStart, i))),
-    [weekStart]
-  );
-  const weekRangeLabel = formatWeekRangeLabel(weekStart);
-  const weekSessionCount = weekDays.reduce((sum, d) => sum + (sessionsByDate.get(d)?.length ?? 0), 0);
-
-  function goToWeek(deltaWeeks: number) {
-    setRefDate((prev) => toISODate(addDays(new Date(`${prev}T00:00:00`), deltaWeeks * 7)));
+  function goToMonth(delta: number) {
+    setViewDate((prev) => {
+      const d = new Date(`${prev}T00:00:00`);
+      d.setMonth(d.getMonth() + delta);
+      return toISODate(d);
+    });
   }
 
   function goToToday() {
-    setRefDate(today);
+    setViewDate(today);
+    setSelectedDate(today);
   }
 
   const touchStart = useRef<{ x: number; y: number } | null>(null);
@@ -164,7 +113,7 @@ export default function CalendarPage() {
     const deltaY = t.clientY - touchStart.current.y;
     touchStart.current = null;
     if (Math.abs(deltaX) > 60 && Math.abs(deltaX) > Math.abs(deltaY)) {
-      goToWeek(deltaX < 0 ? 1 : -1);
+      goToMonth(deltaX < 0 ? 1 : -1);
     }
   }
 
@@ -293,162 +242,136 @@ export default function CalendarPage() {
     c.full_name.toLowerCase().includes(clientSearch.toLowerCase())
   );
 
-  const todayIndex = weekDays.indexOf(today);
-  const now = new Date();
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  const showNowLine = todayIndex !== -1 && nowMinutes >= HOUR_START * 60 && nowMinutes <= HOUR_END * 60;
-  const nowTop = ((nowMinutes - HOUR_START * 60) / 60) * HOUR_HEIGHT;
+  const selectedDaySessions = useMemo(
+    () => [...(sessionsByDate.get(selectedDate) ?? [])].sort((a, b) => (a.start_time < b.start_time ? -1 : 1)),
+    [sessionsByDate, selectedDate]
+  );
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-2xl font-extrabold uppercase tracking-wide text-transparent">
-            Agenda
-          </h1>
-          <p className="text-sm text-zinc-400">
-            {weekRangeLabel} · {weekSessionCount} clase{weekSessionCount === 1 ? "" : "s"}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => openNewForm(today >= weekDays[0] && today <= weekDays[6] ? today : weekDays[0])} className="btn-primary">
-            <Plus size={16} /> Agendar clase
-          </button>
-          <button onClick={() => goToWeek(-1)} className="rounded-lg border border-zinc-700 bg-zinc-800 p-2 text-zinc-300 hover:border-zinc-600 hover:bg-zinc-700" aria-label="Semana anterior">
-            <ChevronLeft size={16} />
-          </button>
-          <button onClick={goToToday} className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm font-medium text-zinc-300 hover:border-zinc-600 hover:bg-zinc-700">
-            Hoy
-          </button>
-          <button onClick={() => goToWeek(1)} className="rounded-lg border border-zinc-700 bg-zinc-800 p-2 text-zinc-300 hover:border-zinc-600 hover:bg-zinc-700" aria-label="Semana siguiente">
-            <ChevronRight size={16} />
-          </button>
-        </div>
+      <div className="flex items-center justify-between">
+        <h1 className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-2xl font-bold text-transparent">
+          Calendario
+        </h1>
+        <button
+          onClick={goToToday}
+          className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-sm font-medium text-zinc-300 hover:border-zinc-600 hover:bg-zinc-700"
+        >
+          Hoy
+        </button>
       </div>
 
-      <p className="text-xs text-zinc-600 sm:hidden">Desliza hacia un lado para cambiar de semana</p>
+      <div className="card p-3">
+        <div className="mb-2 flex items-center justify-between">
+          <button
+            onClick={() => goToMonth(-1)}
+            className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-50"
+            aria-label="Mes anterior"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <span className="text-base font-semibold capitalize text-zinc-50">{monthLabel}</span>
+          <button
+            onClick={() => goToMonth(1)}
+            className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-50"
+            aria-label="Mes siguiente"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
 
-      {loading ? (
-        <div className="h-96 animate-pulse rounded-xl bg-zinc-800" />
-      ) : (
         <div
-          className="relative overflow-x-auto rounded-xl border border-zinc-800/60"
+          className="grid grid-cols-7 gap-y-1"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          <div className="relative grid" style={{ gridTemplateColumns: "48px repeat(7, minmax(112px, 1fr))", minWidth: 850 }}>
-            <div className="sticky left-0 top-0 z-20 border-b border-zinc-800/60 bg-[#120c1e]/90 backdrop-blur-sm" />
-            {weekDays.map((dateIso) => {
-              const d = new Date(`${dateIso}T00:00:00`);
-              const isToday = dateIso === today;
+          {WEEKDAYS.map((w, i) => (
+            <div key={i} className="pb-1 text-center text-[11px] font-semibold uppercase text-zinc-500">
+              {w}
+            </div>
+          ))}
+
+          {weeks.flatMap((week, wi) =>
+            week.map((day, di) => {
+              if (!day) return <div key={`${wi}-${di}`} />;
+              const iso = toISODate(day);
+              const isToday = iso === today;
+              const isSelected = iso === selectedDate;
+              const count = sessionsByDate.get(iso)?.length ?? 0;
               return (
-                <div
-                  key={dateIso}
-                  className={`sticky top-0 z-10 flex flex-col items-center gap-0.5 border-b border-l border-zinc-800/60 bg-[#120c1e]/90 py-2 backdrop-blur-sm ${
-                    isToday ? "bg-violet-500/20" : ""
-                  }`}
+                <button
+                  key={`${wi}-${di}`}
+                  onClick={() => setSelectedDate(iso)}
+                  className="flex flex-col items-center gap-1 py-1"
                 >
-                  <span className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
-                    {WEEKDAYS_SHORT[(d.getDay() + 6) % 7]}
-                  </span>
                   <span
-                    className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
-                      isToday ? "bg-gradient-to-br from-violet-600 to-fuchsia-500 text-white" : "text-zinc-300"
+                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors ${
+                      isSelected
+                        ? "bg-gradient-to-br from-violet-600 to-fuchsia-500 text-white"
+                        : isToday
+                          ? "border border-violet-500 text-violet-300"
+                          : "text-zinc-300 hover:bg-zinc-800"
                     }`}
                   >
-                    {d.getDate()}
+                    {day.getDate()}
                   </span>
-                </div>
+                  <span className="flex h-1.5 items-center gap-0.5">
+                    {Array.from({ length: Math.min(count, 3) }).map((_, i) => (
+                      <span
+                        key={i}
+                        className={`h-1 w-1 rounded-full ${isSelected ? "bg-violet-300" : "bg-violet-500"}`}
+                      />
+                    ))}
+                  </span>
+                </button>
               );
-            })}
+            })
+          )}
+        </div>
+      </div>
 
-            <div className="relative">
-              {hours.map((h) => (
-                <div
-                  key={h}
-                  style={{ height: HOUR_HEIGHT }}
-                  className="sticky left-0 z-10 border-t border-zinc-800/60 bg-[#120c1e]/90 pr-1.5 text-right text-[10px] text-zinc-600 backdrop-blur-sm"
-                >
-                  <span className="relative -top-1.5">{formatHourLabel(h)}</span>
-                </div>
-              ))}
-            </div>
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold capitalize text-zinc-50">{formatSelectedDayLabel(selectedDate)}</h2>
+        <button onClick={() => openNewForm(selectedDate)} className="btn-primary px-3 py-1.5 text-xs">
+          <Plus size={14} /> Agendar
+        </button>
+      </div>
 
-            {weekDays.map((dateIso, dayIndex) => {
-              const daySessions = layoutDaySessions(sessionsByDate.get(dateIso) ?? []);
-              const isToday = dateIso === today;
+      {loading ? (
+        <div className="h-24 animate-pulse rounded-xl bg-zinc-800" />
+      ) : selectedDaySessions.length === 0 ? (
+        <EmptyState icon={CalendarClock} title="No hay clases este dia" description="Toca Agendar para crear una." />
+      ) : (
+        <div className="card overflow-hidden">
+          <ul className="divide-y divide-zinc-800">
+            {selectedDaySessions.map((session) => {
+              const attendeeNames = [
+                ...session.clients.map((c) => c.full_name),
+                ...session.guests.map((g) => `${g} (cortesia)`),
+              ];
               return (
-                <div
-                  key={dateIso}
-                  className={`relative border-l border-zinc-800/60 ${isToday ? "bg-violet-500/5" : ""}`}
-                >
-                  {isToday && showNowLine && (
-                    <div
-                      className="pointer-events-none absolute z-[2] flex items-center"
-                      style={{ top: nowTop, left: 0, width: `${(7 - dayIndex) * 100}%` }}
-                    >
-                      <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-red-500 shadow shadow-red-500/60" />
-                      <span className="h-px flex-1 bg-red-500/70" />
+                <li key={session.id}>
+                  <button
+                    onClick={() => openEditForm(session)}
+                    className="flex w-full items-center gap-3 p-3 text-left hover:bg-zinc-800/60"
+                  >
+                    <div className="flex w-16 shrink-0 flex-col text-xs text-violet-300">
+                      <span className="font-semibold">{session.start_time}</span>
+                      <span className="text-zinc-500">{session.end_time}</span>
                     </div>
-                  )}
-                  {hours.map((h) => (
-                    <div key={h} style={{ height: HOUR_HEIGHT }} className="group relative border-t border-zinc-800">
-                      <button
-                        onClick={() => openNewForm(dateIso, `${pad(h)}:00`, `${pad(h + 1)}:00`)}
-                        className="absolute inset-x-0 top-0 flex h-1/2 items-center justify-center text-[9px] text-violet-400 opacity-0 hover:bg-violet-500/20 sm:group-hover:opacity-100"
-                      >
-                        clic para agregar
-                      </button>
-                      <button
-                        onClick={() => openNewForm(dateIso, `${pad(h)}:30`, `${pad(h + 1)}:30`)}
-                        className="absolute inset-x-0 top-1/2 flex h-1/2 items-center justify-center text-[9px] text-violet-400 opacity-0 hover:bg-violet-500/20 sm:group-hover:opacity-100"
-                      >
-                        clic para agregar
-                      </button>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-zinc-50">
+                        {session.title || `${attendeeNames.length} cliente(s)`}
+                      </p>
+                      {attendeeNames.length > 0 && (
+                        <p className="truncate text-xs text-zinc-400">{attendeeNames.join(", ")}</p>
+                      )}
                     </div>
-                  ))}
-
-                  {daySessions.map((session) => {
-                    const startMin = Math.max(timeToMinutes(session.start_time), HOUR_START * 60);
-                    const endMin = Math.min(timeToMinutes(session.end_time), HOUR_END * 60);
-                    const top = ((startMin - HOUR_START * 60) / 60) * HOUR_HEIGHT;
-                    const height = Math.max(((endMin - startMin) / 60) * HOUR_HEIGHT, 26);
-                    const widthPct = 100 / session.colCount;
-                    const attendeeNames = [
-                      ...session.clients.map((c) => c.full_name),
-                      ...session.guests.map((g) => `${g} (cortesia)`),
-                    ];
-                    return (
-                      <button
-                        key={session.id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEditForm(session);
-                        }}
-                        style={{
-                          top,
-                          height,
-                          left: `${session.col * widthPct}%`,
-                          width: `${widthPct}%`,
-                        }}
-                        className="absolute z-[1] overflow-hidden rounded-md border border-violet-400/50 bg-gradient-to-br from-violet-500/30 to-fuchsia-500/20 p-1.5 text-left shadow-sm hover:from-violet-500/40 hover:to-fuchsia-500/30"
-                      >
-                        <p className="truncate text-xs font-semibold text-violet-100">
-                          {session.title || `${attendeeNames.length} cliente(s)`}
-                        </p>
-                        <p className="truncate text-[11px] text-violet-200">
-                          {session.start_time} - {session.end_time}
-                        </p>
-                        {attendeeNames.length > 0 && (
-                          <p className="truncate text-[10px] text-violet-300">{attendeeNames.join(", ")}</p>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+                  </button>
+                </li>
               );
             })}
-          </div>
+          </ul>
         </div>
       )}
 
