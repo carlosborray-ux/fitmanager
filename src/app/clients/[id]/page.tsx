@@ -230,7 +230,7 @@ export default function ClientProfilePage() {
 
       <div className="card p-4">
         <h2 className="mb-2 font-semibold text-zinc-50">Notas</h2>
-        <p className="text-sm text-zinc-400">{client.notes || "Sin notas."}</p>
+        <p className="whitespace-pre-line text-sm text-zinc-400">{client.notes || "Sin notas."}</p>
       </div>
 
       <div className="card">
